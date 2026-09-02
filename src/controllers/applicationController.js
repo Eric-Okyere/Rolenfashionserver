@@ -3,6 +3,7 @@ const Course = require('../models/Course');
 const Settings = require('../models/Settings');
 const nextApplicationNumber = require('../utils/applicationNumber');
 const generateAdmissionLetter = require('../utils/generateAdmissionLetter');
+const logActivity = require('../utils/activityLog');
 const fs = require('fs');
 const path = require('path');
 
@@ -17,6 +18,12 @@ async function submitApplication(req, res) {
     ...req.body,
     applicationNumber,
     status: 'pending',
+  });
+
+  await logActivity({
+    type: 'application.created',
+    summary: `New application from ${application.firstName} ${application.lastName} for ${course.title}`,
+    meta: { applicationId: application._id, applicationNumber: application.applicationNumber },
   });
 
   res.status(201).json({
@@ -113,6 +120,14 @@ async function updateStatus(req, res) {
   }
 
   await application.save();
+
+  await logActivity({
+    type: 'application.status_changed',
+    summary: `${req.user.name} marked ${application.firstName} ${application.lastName}'s application as ${status}`,
+    meta: { applicationId: application._id, status },
+    actor: req.user,
+  });
+
   res.json({ application, message: `Application marked as ${status}.` });
 }
 

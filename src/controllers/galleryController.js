@@ -1,4 +1,5 @@
 const Gallery = require('../models/Gallery');
+const logActivity = require('../utils/activityLog');
 
 // GET /api/gallery (public — published only unless admin ?all=1)
 async function listGallery(req, res) {
@@ -28,6 +29,12 @@ async function createGalleryItem(req, res) {
     videoUrl: videoFile ? `/uploads/gallery/${videoFile.filename}` : undefined,
     uploadedBy: req.user._id,
   });
+  await logActivity({
+    type: 'gallery.created',
+    summary: `${req.user.name} posted a new product: ${item.title}`,
+    meta: { itemId: item._id },
+    actor: req.user,
+  });
   res.status(201).json({ item });
 }
 
@@ -35,6 +42,12 @@ async function createGalleryItem(req, res) {
 async function updateGalleryItem(req, res) {
   const item = await Gallery.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
   if (!item) return res.status(404).json({ message: 'Item not found.' });
+  await logActivity({
+    type: 'gallery.updated',
+    summary: `${req.user.name} updated product: ${item.title}`,
+    meta: { itemId: item._id },
+    actor: req.user,
+  });
   res.json({ item });
 }
 
@@ -42,6 +55,11 @@ async function updateGalleryItem(req, res) {
 async function deleteGalleryItem(req, res) {
   const item = await Gallery.findByIdAndDelete(req.params.id);
   if (!item) return res.status(404).json({ message: 'Item not found.' });
+  await logActivity({
+    type: 'gallery.deleted',
+    summary: `${req.user.name} deleted product: ${item.title}`,
+    actor: req.user,
+  });
   res.json({ message: 'Deleted.' });
 }
 

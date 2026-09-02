@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const logActivity = require('../utils/activityLog');
 
 // GET /api/users (admin only) — manage staff/admin accounts
 async function listUsers(req, res) {
@@ -9,6 +10,12 @@ async function listUsers(req, res) {
 // POST /api/users (admin only)
 async function createUser(req, res) {
   const user = await User.create(req.body);
+  await logActivity({
+    type: 'user.created',
+    summary: `${req.user.name} created a staff account for ${user.name} (${user.role})`,
+    meta: { userId: user._id, role: user.role },
+    actor: req.user,
+  });
   res.status(201).json({ user: { id: user._id, name: user.name, email: user.email, role: user.role } });
 }
 

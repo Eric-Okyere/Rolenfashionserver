@@ -1,4 +1,5 @@
 const Testimonial = require('../models/Testimonial');
+const logActivity = require('../utils/activityLog');
 
 async function listTestimonials(req, res) {
   const showAll = req.query.all === '1' && req.user;
@@ -9,6 +10,12 @@ async function listTestimonials(req, res) {
 
 async function createTestimonial(req, res) {
   const testimonial = await Testimonial.create(req.body);
+  await logActivity({
+    type: 'testimonial.created',
+    summary: `${req.user.name} added a testimonial from ${testimonial.name}`,
+    meta: { testimonialId: testimonial._id },
+    actor: req.user,
+  });
   res.status(201).json({ testimonial });
 }
 

@@ -1,8 +1,16 @@
 const Message = require('../models/Message');
+const logActivity = require('../utils/activityLog');
 
 // POST /api/messages (public contact form)
 async function createMessage(req, res) {
   const message = await Message.create(req.body);
+
+  await logActivity({
+    type: 'message.received',
+    summary: `New message from ${message.name}${message.subject ? `: ${message.subject}` : ''}`,
+    meta: { messageId: message._id },
+  });
+
   res.status(201).json({ message: 'Thanks for reaching out — we will get back to you soon.', id: message._id });
 }
 

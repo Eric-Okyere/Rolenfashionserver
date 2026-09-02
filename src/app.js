@@ -20,6 +20,7 @@ const messageRoutes = require('./routes/message.routes');
 const testimonialRoutes = require('./routes/testimonial.routes');
 const newsletterRoutes = require('./routes/newsletter.routes');
 const userRoutes = require('./routes/user.routes');
+const activityRoutes = require('./routes/activity.routes');
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/activity', activityRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

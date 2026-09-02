@@ -3,6 +3,7 @@ const { body } = require('express-validator');
 const Newsletter = require('../models/Newsletter');
 const validate = require('../middleware/validate');
 const { protect, authorize } = require('../middleware/auth');
+const logActivity = require('../utils/activityLog');
 
 const router = express.Router();
 
@@ -11,10 +12,12 @@ router.post(
   [body('email').isEmail().withMessage('Enter a valid email')],
   validate,
   async (req, res) => {
+    const email = req.body.email.toLowerCase();
     try {
-      await Newsletter.create({ email: req.body.email.toLowerCase() });
+      await Newsletter.create({ email });
+      await logActivity({ type: 'newsletter.subscribed', summary: `New newsletter subscriber: ${email}` });
     } catch (err) {
-      if (err.code !== 11000) throw err; // ignore duplicate subscribe attempts
+      if (err.code !== 11000) throw err; // ignore duplicate subscribe attempts (not logged — nothing new happened)
     }
     res.status(201).json({ message: 'Subscribed! Thanks for joining our list.' });
   }

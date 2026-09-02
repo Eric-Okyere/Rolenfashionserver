@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const { generateToken, setAuthCookie } = require('../utils/generateToken');
+const logActivity = require('../utils/activityLog');
 
 // POST /api/auth/login  (admin/staff only — students don't have accounts, they track by application number)
 async function login(req, res) {
@@ -15,6 +16,8 @@ async function login(req, res) {
 
   const token = generateToken(user);
   setAuthCookie(res, token);
+
+  await logActivity({ type: 'user.login', summary: `${user.name} logged in`, actor: user });
 
   res.json({
     user: { id: user._id, name: user.name, email: user.email, role: user.role, isCEO: user.isCEO },
