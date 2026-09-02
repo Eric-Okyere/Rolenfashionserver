@@ -1,0 +1,28 @@
+const Message = require('../models/Message');
+
+// POST /api/messages (public contact form)
+async function createMessage(req, res) {
+  const message = await Message.create(req.body);
+  res.status(201).json({ message: 'Thanks for reaching out — we will get back to you soon.', id: message._id });
+}
+
+// GET /api/messages (admin)
+async function listMessages(req, res) {
+  const messages = await Message.find().sort({ createdAt: -1 });
+  res.json({ messages });
+}
+
+// PATCH /api/messages/:id/read (admin)
+async function markRead(req, res) {
+  const message = await Message.findByIdAndUpdate(req.params.id, { isRead: true }, { new: true });
+  if (!message) return res.status(404).json({ message: 'Message not found.' });
+  res.json({ message: message });
+}
+
+// DELETE /api/messages/:id (admin)
+async function deleteMessage(req, res) {
+  await Message.findByIdAndDelete(req.params.id);
+  res.json({ message: 'Deleted.' });
+}
+
+module.exports = { createMessage, listMessages, markRead, deleteMessage };
