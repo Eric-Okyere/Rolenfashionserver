@@ -30,6 +30,19 @@ function generateAdmissionLetter({ application, course, settings }) {
     }
   }
 
+  // Applicant's photo (if they attached one to their application), top-right
+  if (application.photoUrl) {
+    const photoPath = path.join(__dirname, '..', '..', application.photoUrl.replace(/^\/uploads/, 'uploads'));
+    if (fs.existsSync(photoPath)) {
+      try {
+        doc.image(photoPath, 469, 45, { width: 70, height: 70, fit: [70, 70], align: 'center', valign: 'center' });
+        doc.rect(469, 45, 70, 70).strokeColor('#e6dcc0').lineWidth(1).stroke();
+      } catch (e) {
+        /* ignore bad image */
+      }
+    }
+  }
+
   doc
     .fontSize(18)
     .fillColor('#111827')
@@ -98,8 +111,15 @@ function generateAdmissionLetter({ application, course, settings }) {
 
   doc.y = boxTop + 110;
   doc.moveDown(0.8);
+  // Fee is optional (courses can be published without a published price —
+  // see Course.js / CourseCard.js's "Contact us for pricing" fallback), so
+  // this must degrade gracefully instead of printing "GHS NaN".
+  const tuitionLine =
+    course.fee != null
+      ? `Tuition for this program is ${course.feeCurrency || 'GHS'} ${Number(course.fee).toLocaleString()}.`
+      : 'Please contact the admissions office for current tuition information.';
   doc.font('Helvetica').fontSize(11).text(
-    `Tuition for this program is ${course.feeCurrency || 'GHS'} ${Number(course.fee).toLocaleString()}. Please contact the admissions office regarding payment plans, orientation dates, and required documents. This offer is conditional upon meeting all outstanding admission requirements.`,
+    `${tuitionLine} Please contact the admissions office regarding payment plans, orientation dates, and required documents. This offer is conditional upon meeting all outstanding admission requirements.`,
     { align: 'justify' }
   );
 
@@ -138,6 +158,57 @@ function generateAdmissionLetter({ application, course, settings }) {
       760,
       { width: 483, align: 'center' }
     );
+
+  // Second page: List of Materials / Fabrics Needed (set in Admin → Settings)
+  // — printed together with the letter so an admitted student has both in
+  // one document. Skipped entirely if neither list has been filled in.
+  const materialsList = (settings.materialsList || []).filter(Boolean);
+  const fabricsList = (settings.fabricsList || []).filter(Boolean);
+  if (materialsList.length > 0 || fabricsList.length > 0) {
+    doc.addPage();
+
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(16)
+      .fillColor('#111827')
+      .text('LIST OF MATERIALS', 56, 56, { underline: true });
+
+    if (materialsList.length > 0) {
+      doc.moveDown(0.8);
+      doc
+        .font('Helvetica')
+        .fontSize(11)
+        .fillColor('#111827')
+        .text('Students are required to purchase the following materials for school:', { align: 'left' });
+      doc.moveDown(0.5);
+      materialsList.forEach((item, i) => {
+        doc.text(`${i + 1}.  ${item}`, { indent: 12 });
+      });
+    }
+
+    if (fabricsList.length > 0) {
+      doc.moveDown(1.5);
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(16)
+        .fillColor('#111827')
+        .text('FABRICS NEEDED', { underline: true });
+      doc.moveDown(0.8);
+      doc.font('Helvetica').fontSize(11);
+      fabricsList.forEach((item, i) => {
+        doc.text(`${i + 1}.  ${item}`, { indent: 12 });
+      });
+    }
+
+    if (settings.materialsNote) {
+      doc.moveDown(1.2);
+      doc
+        .font('Helvetica-Oblique')
+        .fontSize(10)
+        .fillColor('#6b7280')
+        .text(settings.materialsNote, { align: 'left' });
+    }
+  }
 
   doc.end();
 

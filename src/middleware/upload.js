@@ -82,4 +82,12 @@ const uploadCourseImage = multer({
   fileFilter: fileFilter(ALLOWED_IMAGE),
 });
 
-module.exports = { uploadImage, uploadGallery, uploadCourseImage, UPLOAD_ROOT };
+// Optional passport-style photo a student attaches to their admission
+// application — see application.routes.js (POST /api/applications).
+const uploadApplicationPhoto = multer({
+  storage: makeStorage('applications'),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: fileFilter(ALLOWED_IMAGE),
+});
+
+module.exports = { uploadImage, uploadGallery, uploadCourseImage, uploadApplicationPhoto, UPLOAD_ROOT };

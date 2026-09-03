@@ -30,6 +30,13 @@ const settingsSchema = new mongoose.Schema(
       default:
         'We are pleased to inform you that you have been offered admission to Rolen School of Fashion and Design. This letter confirms your place, subject to the terms below.',
     },
+    // Printed as a second page on every admission letter (see
+    // generateAdmissionLetter.js) so an admitted student can print their
+    // letter and shopping list together in one go. Either list can be left
+    // empty — the page is skipped entirely if both are empty.
+    materialsList: { type: [String], default: [] }, // e.g. "A set of curves", "Tape measure"...
+    fabricsList: { type: [String], default: [] }, // e.g. "Cotton", "Rayon"...
+    materialsNote: { type: String, default: '' }, // freeform note, e.g. when fabrics are needed / class days
   },
   { timestamps: true }
 );

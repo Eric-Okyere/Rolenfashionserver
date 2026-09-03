@@ -17,6 +17,7 @@ const applicationSchema = new mongoose.Schema(
     guardianName: { type: String },
     guardianPhone: { type: String },
     statementOfPurpose: { type: String, maxlength: 2000 },
+    photoUrl: { type: String }, // optional passport-style photo uploaded with the application
     status: {
       type: String,
       enum: ['pending', 'under_review', 'admitted', 'rejected', 'waitlisted'],

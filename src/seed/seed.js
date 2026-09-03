@@ -119,6 +119,29 @@ async function run() {
       // hasn't been given yet — left blank rather than guessed. Set it in
       // Admin → Settings once known (the Contact page and the site-wide
       // WhatsApp button both read from this field independently of `phone`).
+      // Real "List of Materials" / "Fabrics Needed" flyer content, given
+      // directly by Eric — printed as page 2 of every admission letter.
+      materialsList: [
+        'A set of curves',
+        'Gray baft',
+        'Sketch pads',
+        'Tape measure',
+        'Brown paper',
+        'A pair of scissors',
+        'Seam ripper',
+        'Sewing needles. Hand needles',
+        'A pack of pins',
+        'Threads',
+        'Meter rule',
+        'Specimen book',
+        'Masking tape',
+        'Tracing paper',
+        'Tailor chalk',
+        'Notebook',
+      ],
+      fabricsList: ['Cotton', 'Rayon', 'Chiffon', 'Plaid', 'Lace/ satin'],
+      materialsNote:
+        'NB: Fabrics should be brought as and when they will be needed.\nClasses are from Mondays to Wednesdays only every week.',
     });
     console.log('Created default school settings — edit real details in Admin → Settings.');
   }

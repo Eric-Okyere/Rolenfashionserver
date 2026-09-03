@@ -4,6 +4,7 @@ const ctrl = require('../controllers/applicationController');
 const { protect, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { applicationLimiter } = require('../middleware/rateLimiters');
+const { uploadApplicationPhoto } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -17,8 +18,18 @@ const applicationValidation = [
   body('course').isMongoId().withMessage('Select a valid course'),
 ];
 
-// Public
-router.post('/', applicationLimiter, applicationValidation, validate, ctrl.submitApplication);
+// Public — the form is submitted as multipart/form-data so an optional
+// "photo" file can ride along with the text fields; uploadApplicationPhoto
+// parses that into req.body (text fields) / req.file (the photo, if any)
+// before the validators below run.
+router.post(
+  '/',
+  applicationLimiter,
+  uploadApplicationPhoto.single('photo'),
+  applicationValidation,
+  validate,
+  ctrl.submitApplication
+);
 router.get('/track/:applicationNumber', ctrl.trackApplication);
 router.get('/track/:applicationNumber/letter', ctrl.downloadLetter);
 

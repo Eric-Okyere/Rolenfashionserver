@@ -4,6 +4,7 @@ const Settings = require('../models/Settings');
 const nextApplicationNumber = require('../utils/applicationNumber');
 const generateAdmissionLetter = require('../utils/generateAdmissionLetter');
 const logActivity = require('../utils/activityLog');
+const { notifyNewApplication } = require('../utils/whatsapp');
 const fs = require('fs');
 const path = require('path');
 
@@ -18,12 +19,22 @@ async function submitApplication(req, res) {
     ...req.body,
     applicationNumber,
     status: 'pending',
+    photoUrl: req.file ? `/uploads/applications/${req.file.filename}` : undefined,
   });
 
   await logActivity({
     type: 'application.created',
     summary: `New application from ${application.firstName} ${application.lastName} for ${course.title}`,
     meta: { applicationId: application._id, applicationNumber: application.applicationNumber },
+  });
+
+  // Fire-and-forget (not awaited) so a slow or unconfigured WhatsApp API
+  // never delays the student's response — errors are caught internally and
+  // this is a silent no-op until WHATSAPP_* env vars are set (see README).
+  notifyNewApplication({
+    applicantName: `${application.firstName} ${application.lastName}`,
+    courseTitle: course.title,
+    applicationNumber: application.applicationNumber,
   });
 
   res.status(201).json({

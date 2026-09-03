@@ -120,8 +120,40 @@ async function run() {
     settings.city = settings.city || 'Accra';
     settings.country = settings.country || 'Ghana';
     settings.phone = '055 339 3254 / 024 344 2262';
+
+    // Real "List of Materials" / "Fabrics Needed" flyer content, given
+    // directly by Eric — only filled in if still empty, so a re-run never
+    // clobbers anything he's since edited in Admin → Settings.
+    if (!settings.materialsList || settings.materialsList.length === 0) {
+      settings.materialsList = [
+        'A set of curves',
+        'Gray baft',
+        'Sketch pads',
+        'Tape measure',
+        'Brown paper',
+        'A pair of scissors',
+        'Seam ripper',
+        'Sewing needles. Hand needles',
+        'A pack of pins',
+        'Threads',
+        'Meter rule',
+        'Specimen book',
+        'Masking tape',
+        'Tracing paper',
+        'Tailor chalk',
+        'Notebook',
+      ];
+    }
+    if (!settings.fabricsList || settings.fabricsList.length === 0) {
+      settings.fabricsList = ['Cotton', 'Rayon', 'Chiffon', 'Plaid', 'Lace/ satin'];
+    }
+    if (!settings.materialsNote) {
+      settings.materialsNote =
+        'NB: Fabrics should be brought as and when they will be needed.\nClasses are from Mondays to Wednesdays only every week.';
+    }
+
     await settings.save();
-    console.log('Updated Settings address/phone with real contact info.');
+    console.log('Updated Settings address/phone/materials-and-fabrics with real content.');
   } else {
     console.log('No Settings document found — run `npm run seed` first.');
   }
