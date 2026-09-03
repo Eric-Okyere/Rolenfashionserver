@@ -8,6 +8,11 @@ const applicationSchema = new mongoose.Schema(
     email: { type: String, required: true, lowercase: true, trim: true },
     phone: { type: String, required: true, trim: true },
     dateOfBirth: { type: Date, required: true },
+    // The public form now only offers Female/Male (Eric: "gender should be
+    // only male and female"). 'Other' and 'Prefer not to say' are kept in the
+    // enum — not removed — purely so any already-submitted application that
+    // saved one of those values doesn't fail validation the next time an
+    // admin edits/saves it; new submissions can only ever produce the first two.
     gender: { type: String, enum: ['Female', 'Male', 'Other', 'Prefer not to say'] },
     address: { type: String, required: true },
     nationality: { type: String, default: 'Ghanaian' },

@@ -161,31 +161,55 @@ async function generateAdmissionLetter({ application, course, settings }) {
 
   doc.y = boxTop + 110;
   doc.moveDown(0.8);
-  // Tuition is admin-editable free text (settings.tuitionText) so it can
-  // describe more than one track's pricing (e.g. Beginner vs. Advanced)
-  // instead of always being tied to a single course's `fee`. Falls back to
-  // the old auto-generated per-course line when tuitionText isn't set. Fee is
-  // optional on a course (see Course.js / CourseCard.js's "Contact us for
-  // pricing" fallback), so that fallback must itself degrade gracefully
-  // instead of printing "GHS NaN".
+
+  // Pulled up from below the second-page build-out so the referral sentence
+  // on THIS page can name only the sections that will actually appear on
+  // page two (each of the four is independently optional there).
+  const materialsList = (settings.materialsList || []).filter(Boolean);
+  const fabricsList = (settings.fabricsList || []).filter(Boolean);
+  const paymentScheduleText = (settings.paymentScheduleText || '').trim();
+  const scheduleText = (settings.scheduleText || '').trim();
+  const hasPageTwo = materialsList.length > 0 || fabricsList.length > 0 || paymentScheduleText || scheduleText;
+
+  // Tuition now always reflects the SPECIFIC class the student was admitted
+  // to (Beginner vs. Advanced carry different fees/durations) rather than a
+  // single shared statement that would otherwise have to describe every
+  // track's pricing at once, on every letter, regardless of which one the
+  // student applied for. `settings.tuitionText` (admin-editable free text)
+  // is kept only as a fallback for the rare course published without a fee
+  // — see Course.js / CourseCard.js's own "Contact us for pricing" fallback
+  // for the same case — so that fallback must itself degrade gracefully
+  // instead of ever printing "GHS NaN".
   const tuitionLine =
-    (settings.tuitionText || '').trim() ||
-    (course.fee != null
-      ? `Tuition for this program is ${course.feeCurrency || 'GHS'} ${Number(course.fee).toLocaleString()}.`
-      : 'Please contact the admissions office for current tuition information.');
+    course.fee != null
+      ? `Tuition for the ${course.title}, ${course.duration}, is ${course.feeCurrency || 'GHS'} ${Number(course.fee).toLocaleString()}, payable in accordance with the fees and payment schedule ${hasPageTwo ? 'set out on page two of this letter' : 'communicated by the admissions office'}.`
+      : (settings.tuitionText || '').trim() || 'Please contact the admissions office for current tuition information.';
   doc.font('Helvetica').fontSize(11).text(tuitionLine, { align: 'justify' });
   doc.moveDown(0.5);
-  doc.text(
-    'Please contact the admissions office regarding payment plans, orientation dates, and required documents. This offer is conditional upon meeting all outstanding admission requirements.',
-    { align: 'justify' }
-  );
+
+  // Second paragraph: point the student at whichever page-two sections will
+  // actually be present, rather than a generic "contact the office" line —
+  // built from a natural-language list so it only ever names sections that
+  // exist (a course with no materials/fabrics/schedule content configured
+  // still gets a coherent, non-broken sentence).
+  const pageTwoParts = [];
+  if (materialsList.length > 0 || fabricsList.length > 0) pageTwoParts.push('the required materials and fabrics');
+  if (paymentScheduleText) pageTwoParts.push('the fees and payment schedule');
+  if (scheduleText) pageTwoParts.push('the class schedule and academic terms');
+  const joinWithAnd = (items) =>
+    items.length <= 1 ? items.join('') : items.length === 2 ? `${items[0]} and ${items[1]}` : `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
+  const followUpLine =
+    pageTwoParts.length > 0
+      ? `Please refer to page two of this letter for ${joinWithAnd(pageTwoParts)}. This offer is conditional upon meeting all outstanding admission requirements, including settlement of the deposit specified in the payment schedule by the stated date.`
+      : 'Please contact the admissions office regarding orientation dates and any outstanding admission requirements. This offer is conditional upon meeting all outstanding admission requirements.';
+  doc.text(followUpLine, { align: 'justify' });
 
   doc.moveDown(0.8);
   doc.text('We look forward to welcoming you and supporting your growth as a fashion creative.', { align: 'justify' });
 
-  doc.moveDown(2.5);
+  doc.moveDown(2.2);
 
-  // Signature block
+  // Signature block — the school's side of the offer.
   const sigY = doc.y;
   if (sigBuffer) {
     try {
@@ -202,14 +226,40 @@ async function generateAdmissionLetter({ application, course, settings }) {
     .text(settings.ceoName || 'Chief Executive Officer', 56, sigY + 66);
   doc.font('Helvetica').fontSize(9).fillColor('#6b7280').text(settings.ceoTitle || 'Chief Executive Officer', 56, sigY + 82);
 
-  // Footer
+  // Acceptance section — the student's side of the offer. Eric asked that
+  // the letter make clear the student must sign it after printing, so this
+  // gives them an actual place to do that rather than just a verbal
+  // instruction: a short notice plus blank signature/date lines, laid out
+  // below the CEO's signature so the printed page reads school-signs-first,
+  // student-signs-second.
+  doc.y = sigY + 96;
+  doc.moveTo(56, doc.y).lineTo(539, doc.y).strokeColor('#e6dcc0').lineWidth(1).stroke();
+  doc.moveDown(0.9);
+  doc.font('Helvetica-Bold').fontSize(10).fillColor('#111827').text('ACCEPTANCE OF OFFER');
+  doc.moveDown(0.35);
+  doc
+    .font('Helvetica')
+    .fontSize(9.5)
+    .fillColor('#374151')
+    .text('Please print this letter and sign below to confirm your acceptance of this offer of admission.', { align: 'left' });
+  doc.moveDown(1.2);
+  const acceptY = doc.y;
+  doc.moveTo(56, acceptY).lineTo(260, acceptY).strokeColor('#111827').lineWidth(1).stroke();
+  doc.font('Helvetica').fontSize(8).fillColor('#6b7280').text("Student's Signature", 56, acceptY + 5);
+  doc.moveTo(340, acceptY).lineTo(483, acceptY).strokeColor('#111827').lineWidth(1).stroke();
+  doc.font('Helvetica').fontSize(8).fillColor('#6b7280').text('Date', 340, acceptY + 5);
+
+  // Footer — anchored just below the acceptance block instead of a fixed
+  // y-coordinate, so it can never collide with (or float awkwardly above)
+  // content whose length varies with how much page-two material exists.
+  doc.moveDown(2.2);
   doc
     .fontSize(8)
     .fillColor('#9ca3af')
     .text(
       `This letter was generated electronically by ${settings.schoolName || 'Rolen School of Fashion and Design'} and is valid without a physical stamp. Verify at ${settings.email || ''}.`,
       56,
-      760,
+      doc.y,
       { width: 483, align: 'center' }
     );
 
@@ -218,12 +268,7 @@ async function generateAdmissionLetter({ application, course, settings }) {
   // Admin → Settings) — printed together with the letter so an admitted
   // student has everything in one document. Each section is independently
   // optional; the page itself is skipped entirely if all four are empty.
-  const materialsList = (settings.materialsList || []).filter(Boolean);
-  const fabricsList = (settings.fabricsList || []).filter(Boolean);
-  const paymentScheduleText = (settings.paymentScheduleText || '').trim();
-  const scheduleText = (settings.scheduleText || '').trim();
-
-  if (materialsList.length > 0 || fabricsList.length > 0 || paymentScheduleText || scheduleText) {
+  if (hasPageTwo) {
     doc.addPage();
     drawWatermark(doc, logoBuffer);
 
