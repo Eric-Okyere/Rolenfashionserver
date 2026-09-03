@@ -25,7 +25,11 @@ const PLACEHOLDER_TITLES = [
 ];
 
 // Rolen's real courses, as given directly by the school's co-owner — five
-// standalone 6-month programs, no published fee.
+// standalone 6-month programs. Fee (GHS 7,000, "For Beginners") is from the
+// Fees & Payment Schedule flyer, given directly by Eric as applying across
+// all five — see Settings.paymentScheduleText for the full breakdown, which
+// is what actually prints on the admission letter; this fee is what's shown
+// on the public Courses pages and the letter's tuition line.
 const realCourses = [
   {
     title: 'Fashion Theory',
@@ -37,6 +41,8 @@ const realCourses = [
     level: 'All Levels',
     intakePeriods: ['Rolling admissions'],
     order: 1,
+    fee: 7000,
+    feeCurrency: 'GHS',
     isPublished: true,
   },
   {
@@ -49,6 +55,8 @@ const realCourses = [
     level: 'All Levels',
     intakePeriods: ['Rolling admissions'],
     order: 2,
+    fee: 7000,
+    feeCurrency: 'GHS',
     isPublished: true,
   },
   {
@@ -61,6 +69,8 @@ const realCourses = [
     level: 'All Levels',
     intakePeriods: ['Rolling admissions'],
     order: 3,
+    fee: 7000,
+    feeCurrency: 'GHS',
     isPublished: true,
   },
   {
@@ -73,6 +83,8 @@ const realCourses = [
     level: 'All Levels',
     intakePeriods: ['Rolling admissions'],
     order: 4,
+    fee: 7000,
+    feeCurrency: 'GHS',
     isPublished: true,
   },
   {
@@ -85,6 +97,8 @@ const realCourses = [
     level: 'All Levels',
     intakePeriods: ['Rolling admissions'],
     order: 5,
+    fee: 7000,
+    feeCurrency: 'GHS',
     isPublished: true,
   },
 ];

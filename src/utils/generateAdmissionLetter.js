@@ -27,6 +27,26 @@ async function loadImageBuffer(urlOrPath) {
   }
 }
 
+// Draws a large, faint, rotated copy of the school logo centered on the
+// current page, behind everything else — a watermark. Must be called before
+// any other drawing on that page (pdfkit layers each call on top of the
+// last), and wraps the rotation/opacity change in save()/restore() so it
+// never leaks into the header/text drawn afterward.
+function drawWatermark(doc, logoBuffer) {
+  if (!logoBuffer) return;
+  try {
+    const { width: pageWidth, height: pageHeight } = doc.page;
+    const size = 340;
+    doc.save();
+    doc.opacity(0.07);
+    doc.rotate(-35, { origin: [pageWidth / 2, pageHeight / 2] });
+    doc.image(logoBuffer, pageWidth / 2 - size / 2, pageHeight / 2 - size / 2, { width: size, height: size, fit: [size, size] });
+    doc.restore();
+  } catch (e) {
+    /* ignore bad image */
+  }
+}
+
 /**
  * Generates a PDF admission letter for an admitted applicant, signed with the
  * CEO's name/title and (if uploaded) their signature image from Settings.
@@ -50,6 +70,9 @@ async function generateAdmissionLetter({ application, course, settings }) {
   const doc = new PDFDocument({ size: 'A4', margin: 56 });
   const stream = fs.createWriteStream(filePath);
   doc.pipe(stream);
+
+  // Watermark first — everything else on this page draws on top of it.
+  drawWatermark(doc, logoBuffer);
 
   // Header
   if (logoBuffer) {
@@ -194,6 +217,7 @@ async function generateAdmissionLetter({ application, course, settings }) {
 
   if (materialsList.length > 0 || fabricsList.length > 0 || paymentScheduleText) {
     doc.addPage();
+    drawWatermark(doc, logoBuffer);
 
     let isFirstSection = true;
     function sectionHeading(title) {

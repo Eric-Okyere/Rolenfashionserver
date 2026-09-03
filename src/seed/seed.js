@@ -10,9 +10,8 @@ const Settings = require('../models/Settings');
 const Testimonial = require('../models/Testimonial');
 
 // Rolen's real courses, as given directly by the school's co-owner — five
-// standalone 6-month programs. No published fee on any of them — leave it
-// unset so the site shows "Contact us for pricing" until Admin → Courses
-// has a real figure.
+// standalone 6-month programs, each GHS 7,000 (from the Fees & Payment
+// Schedule flyer — see Settings.paymentScheduleText for the full breakdown).
 const sampleCourses = [
   {
     title: 'Fashion Theory',
@@ -24,6 +23,8 @@ const sampleCourses = [
     level: 'All Levels',
     intakePeriods: ['Rolling admissions'],
     order: 1,
+    fee: 7000,
+    feeCurrency: 'GHS',
   },
   {
     title: 'Textile Appreciation',
@@ -35,6 +36,8 @@ const sampleCourses = [
     level: 'All Levels',
     intakePeriods: ['Rolling admissions'],
     order: 2,
+    fee: 7000,
+    feeCurrency: 'GHS',
   },
   {
     title: 'Pattern Drafting',
@@ -46,6 +49,8 @@ const sampleCourses = [
     level: 'All Levels',
     intakePeriods: ['Rolling admissions'],
     order: 3,
+    fee: 7000,
+    feeCurrency: 'GHS',
   },
   {
     title: 'Garment Construction',
@@ -57,6 +62,8 @@ const sampleCourses = [
     level: 'All Levels',
     intakePeriods: ['Rolling admissions'],
     order: 4,
+    fee: 7000,
+    feeCurrency: 'GHS',
   },
   {
     title: 'Modern Sewing Technologies',
@@ -68,6 +75,8 @@ const sampleCourses = [
     level: 'All Levels',
     intakePeriods: ['Rolling admissions'],
     order: 5,
+    fee: 7000,
+    feeCurrency: 'GHS',
   },
 ];
 
