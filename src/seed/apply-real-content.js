@@ -92,7 +92,7 @@ const realCourses = [
     isPublished: true,
   },
   {
-    title: 'Modern Sewing Technologies',
+    title: 'Modern Sewing Technology',
     category: 'Tailoring',
     summary: 'Working with modern sewing machines and techniques used in today\'s garment industry.',
     description:
