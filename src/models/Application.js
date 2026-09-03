@@ -17,7 +17,12 @@ const applicationSchema = new mongoose.Schema(
     guardianName: { type: String },
     guardianPhone: { type: String },
     statementOfPurpose: { type: String, maxlength: 2000 },
-    photoUrl: { type: String }, // optional passport-style photo uploaded with the application
+    // Passport-style photo — required on new applications (enforced in
+    // application.routes.js's validation, not here: Mongoose's `required`
+    // validates the whole document on every save, which would break admins
+    // updating the status of any application submitted before this field
+    // became mandatory and so has no photo).
+    photoUrl: { type: String },
     status: {
       type: String,
       enum: ['pending', 'under_review', 'admitted', 'rejected', 'waitlisted'],

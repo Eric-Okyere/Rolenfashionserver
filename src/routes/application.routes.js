@@ -16,12 +16,17 @@ const applicationValidation = [
   body('dateOfBirth').isISO8601().withMessage('Enter a valid date of birth'),
   body('address').trim().notEmpty().withMessage('Address is required'),
   body('course').isMongoId().withMessage('Select a valid course'),
+  // Not a body field — uploadApplicationPhoto below puts the upload on
+  // req.file, not req.body.photo — but express-validator's custom() gets
+  // the full req, so this still slots into the same errors.array() /
+  // { field, message } shape everything else uses (field name: "photo").
+  body('photo').custom((_, { req }) => !!req.file).withMessage('A passport photo is required.'),
 ];
 
-// Public — the form is submitted as multipart/form-data so an optional
-// "photo" file can ride along with the text fields; uploadApplicationPhoto
-// parses that into req.body (text fields) / req.file (the photo, if any)
-// before the validators below run.
+// Public — the form is submitted as multipart/form-data so the required
+// "photo" file rides along with the text fields; uploadApplicationPhoto
+// parses that into req.body (text fields) / req.file (the photo) before
+// the validators below run.
 router.post(
   '/',
   applicationLimiter,

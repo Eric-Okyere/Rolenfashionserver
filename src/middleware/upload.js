@@ -125,8 +125,9 @@ const uploadCourseImage = multer({
   fileFilter: fileFilter(ALLOWED_IMAGE),
 });
 
-// Optional passport-style photo a student attaches to their admission
-// application — see application.routes.js (POST /api/applications).
+// Required passport-style photo a student attaches to their admission
+// application — see application.routes.js (POST /api/applications), which
+// enforces that it's present.
 const uploadApplicationPhoto = multer({
   storage: makeStorage('applications'),
   limits: { fileSize: 5 * 1024 * 1024 },
