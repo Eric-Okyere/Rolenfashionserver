@@ -9,73 +9,39 @@ const Course = require('../models/Course');
 const Settings = require('../models/Settings');
 const Testimonial = require('../models/Testimonial');
 
-// Rolen's real courses, as given directly by the school's co-owner — five
-// standalone 6-month programs, each GHS 7,000 (from the Fees & Payment
-// Schedule flyer — see Settings.paymentScheduleText for the full breakdown).
+// Rolen's real program structure, as given directly by the school's
+// co-owner: students don't pick one subject out of several — every student
+// takes all five subject areas together, and the actual choice is which
+// class *track* they enroll in. So the catalog is two tracks, not five
+// standalone subjects (see apply-real-content.js for how an already-seeded
+// database migrates off the old five-subject-course structure safely).
 const sampleCourses = [
   {
-    title: 'Fashion Theory',
+    title: 'Beginner Class',
     category: 'Fashion Design',
-    summary: 'Foundational theory behind fashion design — principles, history, and design thinking.',
+    summary: 'Our foundational 6-month program covering fashion theory, textiles, pattern drafting, garment construction and modern sewing.',
     description:
-      'A 6-month foundation in fashion design theory: design principles, fashion history, and how designers think through a garment from concept to collection. Runs at our Weija, Accra campus.',
-    duration: '6 Months (Mon – Fri)',
-    level: 'All Levels',
-    intakePeriods: ['Rolling admissions'],
+      'A 6-month, studio-based foundation covering all five core areas of fashion and tailoring: fashion theory, textile appreciation, pattern drafting, garment construction, and modern sewing technologies. Meets Monday to Wednesday, 9:00am – 2:00pm, at our McCarthy Hill, West Accra campus.',
+    duration: '6 Months (Mon – Wed, 9am – 2pm)',
+    level: 'Beginner',
+    curriculum: ['Fashion Theory', 'Textile Appreciation', 'Pattern Drafting', 'Garment Construction', 'Modern Sewing Technologies'],
+    intakePeriods: ['March – September', 'September – March'],
     order: 1,
     fee: 7000,
     feeCurrency: 'GHS',
   },
   {
-    title: 'Textile Appreciation',
-    category: 'Textiles',
-    summary: 'Understanding fabrics — fiber types, weaves, and how to choose the right textile for a design.',
+    title: 'Advanced Class',
+    category: 'Fashion Design',
+    summary: 'A faster-paced 3-month program building on the fundamentals across all five subject areas.',
     description:
-      'A 6-month course in textiles: fiber and fabric types, weaves and finishes, and how to select and work with the right material for a garment. Runs at our Weija, Accra campus.',
-    duration: '6 Months (Mon – Fri)',
-    level: 'All Levels',
-    intakePeriods: ['Rolling admissions'],
+      'A 3-month, studio-based advanced program covering all five core areas of fashion and tailoring — fashion theory, textile appreciation, pattern drafting, garment construction, and modern sewing technologies — at a faster pace and greater depth than the Beginner Class. Meets Thursday and Friday, 9:00am – 2:00pm, at our McCarthy Hill, West Accra campus.',
+    duration: '3 Months (Thu – Fri, 9am – 2pm)',
+    level: 'Advanced',
+    curriculum: ['Fashion Theory', 'Textile Appreciation', 'Pattern Drafting', 'Garment Construction', 'Modern Sewing Technologies'],
+    intakePeriods: ['March – September', 'September – March'],
     order: 2,
-    fee: 7000,
-    feeCurrency: 'GHS',
-  },
-  {
-    title: 'Pattern Drafting',
-    category: 'Tailoring',
-    summary: 'Drafting garment patterns from measurements — the technical foundation of tailoring.',
-    description:
-      'A 6-month, hands-on course in pattern drafting: taking body measurements and drafting accurate garment patterns by hand — the technical foundation every tailor and designer builds on. Runs at our Weija, Accra campus.',
-    duration: '6 Months (Mon – Fri)',
-    level: 'All Levels',
-    intakePeriods: ['Rolling admissions'],
-    order: 3,
-    fee: 7000,
-    feeCurrency: 'GHS',
-  },
-  {
-    title: 'Garment Construction',
-    category: 'Tailoring',
-    summary: 'Turning patterns into finished garments — cutting, sewing, and finishing techniques.',
-    description:
-      'A 6-month, studio-based course in garment construction: cutting fabric, machine and hand-sewing techniques, and finishing a garment to a professional standard. Runs at our Weija, Accra campus.',
-    duration: '6 Months (Mon – Fri)',
-    level: 'All Levels',
-    intakePeriods: ['Rolling admissions'],
-    order: 4,
-    fee: 7000,
-    feeCurrency: 'GHS',
-  },
-  {
-    title: 'Modern Sewing Technologies',
-    category: 'Tailoring',
-    summary: 'Working with modern sewing machines and techniques used in today\'s garment industry.',
-    description:
-      'A 6-month course covering the sewing machines and techniques used in modern garment production — building speed, precision, and industry-ready sewing skills. Runs at our Weija, Accra campus.',
-    duration: '6 Months (Mon – Fri)',
-    level: 'All Levels',
-    intakePeriods: ['Rolling admissions'],
-    order: 5,
-    fee: 7000,
+    fee: 10000,
     feeCurrency: 'GHS',
   },
 ];
