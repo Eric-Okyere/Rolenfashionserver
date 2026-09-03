@@ -161,15 +161,22 @@ async function generateAdmissionLetter({ application, course, settings }) {
 
   doc.y = boxTop + 110;
   doc.moveDown(0.8);
-  // Fee is optional (courses can be published without a published price —
-  // see Course.js / CourseCard.js's "Contact us for pricing" fallback), so
-  // this must degrade gracefully instead of printing "GHS NaN".
+  // Tuition is admin-editable free text (settings.tuitionText) so it can
+  // describe more than one track's pricing (e.g. Beginner vs. Advanced)
+  // instead of always being tied to a single course's `fee`. Falls back to
+  // the old auto-generated per-course line when tuitionText isn't set. Fee is
+  // optional on a course (see Course.js / CourseCard.js's "Contact us for
+  // pricing" fallback), so that fallback must itself degrade gracefully
+  // instead of printing "GHS NaN".
   const tuitionLine =
-    course.fee != null
+    (settings.tuitionText || '').trim() ||
+    (course.fee != null
       ? `Tuition for this program is ${course.feeCurrency || 'GHS'} ${Number(course.fee).toLocaleString()}.`
-      : 'Please contact the admissions office for current tuition information.';
-  doc.font('Helvetica').fontSize(11).text(
-    `${tuitionLine} Please contact the admissions office regarding payment plans, orientation dates, and required documents. This offer is conditional upon meeting all outstanding admission requirements.`,
+      : 'Please contact the admissions office for current tuition information.');
+  doc.font('Helvetica').fontSize(11).text(tuitionLine, { align: 'justify' });
+  doc.moveDown(0.5);
+  doc.text(
+    'Please contact the admissions office regarding payment plans, orientation dates, and required documents. This offer is conditional upon meeting all outstanding admission requirements.',
     { align: 'justify' }
   );
 
@@ -206,16 +213,17 @@ async function generateAdmissionLetter({ application, course, settings }) {
       { width: 483, align: 'center' }
     );
 
-  // Second page: List of Materials / Fabrics Needed, plus the Fees & Payment
-  // Schedule (all set in Admin → Settings) — printed together with the
-  // letter so an admitted student has everything in one document. Each
-  // section is independently optional; the page itself is skipped entirely
-  // if all three are empty.
+  // Second page: List of Materials / Fabrics Needed, the Fees & Payment
+  // Schedule, and the Class Schedule & Academic Terms (all set in
+  // Admin → Settings) — printed together with the letter so an admitted
+  // student has everything in one document. Each section is independently
+  // optional; the page itself is skipped entirely if all four are empty.
   const materialsList = (settings.materialsList || []).filter(Boolean);
   const fabricsList = (settings.fabricsList || []).filter(Boolean);
   const paymentScheduleText = (settings.paymentScheduleText || '').trim();
+  const scheduleText = (settings.scheduleText || '').trim();
 
-  if (materialsList.length > 0 || fabricsList.length > 0 || paymentScheduleText) {
+  if (materialsList.length > 0 || fabricsList.length > 0 || paymentScheduleText || scheduleText) {
     doc.addPage();
     drawWatermark(doc, logoBuffer);
 
@@ -266,6 +274,12 @@ async function generateAdmissionLetter({ application, course, settings }) {
       sectionHeading('FEES AND PAYMENT SCHEDULE');
       doc.moveDown(0.8);
       doc.font('Helvetica').fontSize(11).fillColor('#111827').text(paymentScheduleText, { align: 'justify' });
+    }
+
+    if (scheduleText) {
+      sectionHeading('CLASS SCHEDULE & ACADEMIC TERMS');
+      doc.moveDown(0.8);
+      doc.font('Helvetica').fontSize(11).fillColor('#111827').text(scheduleText, { align: 'justify' });
     }
   }
 

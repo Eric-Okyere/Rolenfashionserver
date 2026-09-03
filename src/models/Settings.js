@@ -42,6 +42,16 @@ const settingsSchema = new mongoose.Schema(
     // per-course fee/feeCurrency fields since this describes the schedule
     // (deposit, installments) rather than just a headline amount.
     paymentScheduleText: { type: String, default: '' },
+    // Printed near the top of admission letter page 1, in place of the old
+    // auto-generated "Tuition for this program is GHS X" line — free text so
+    // it can describe more than one track's pricing (e.g. Beginner vs.
+    // Advanced) rather than always being tied to a single course's `fee`.
+    // Left empty, the letter falls back to the old per-course auto line.
+    tuitionText: { type: String, default: '' },
+    // Printed as its own section on admission letter page 2, under "CLASS
+    // SCHEDULE & ACADEMIC TERMS" — class days/times per track and the
+    // academic terms/calendar. Admin-editable, skipped when empty.
+    scheduleText: { type: String, default: '' },
   },
   { timestamps: true }
 );

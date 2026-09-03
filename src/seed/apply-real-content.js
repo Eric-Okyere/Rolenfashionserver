@@ -2,8 +2,10 @@
 // or earlier-guess course/contact data. Safe to run more than once — it only
 // ever touches the known placeholder titles (including an earlier single
 // "Fashion and Design" course guess this migration itself used to create)
-// and the Settings singleton's address/phone fields, so anything Eric has
-// already customized elsewhere in Admin → Settings is left untouched.
+// and a specific set of Settings fields (address/email/phone/signature and
+// the materials/fabrics/tuition/payment-schedule/class-schedule text — see
+// the comments below for which are forced vs. fill-if-empty), so anything
+// else Eric has already customized in Admin → Settings is left untouched.
 //
 // Usage: npm run migrate:real-content   (from /server, with .env configured)
 require('dotenv').config();
@@ -25,11 +27,13 @@ const PLACEHOLDER_TITLES = [
 ];
 
 // Rolen's real courses, as given directly by the school's co-owner — five
-// standalone 6-month programs. Fee (GHS 7,000, "For Beginners") is from the
-// Fees & Payment Schedule flyer, given directly by Eric as applying across
-// all five — see Settings.paymentScheduleText for the full breakdown, which
-// is what actually prints on the admission letter; this fee is what's shown
-// on the public Courses pages and the letter's tuition line.
+// standalone 6-month (Beginner-track) programs. Fee (GHS 7,000, "For
+// Beginners") is from the Fees & Payment Schedule flyer, given directly by
+// Eric as applying across all five — this is what's shown on the public
+// Courses pages. The admission letter's own tuition line no longer reads
+// this field directly: it prints Settings.tuitionText instead (which now
+// states both the Beginner and Advanced tuition), falling back to this
+// per-course fee only if tuitionText is ever cleared.
 const realCourses = [
   {
     title: 'Fashion Theory',
@@ -130,10 +134,26 @@ async function run() {
   // `whatsapp` — set it directly in Admin → Settings once known.
   const settings = await Settings.findOne();
   if (settings) {
-    settings.address = 'Weija-Accra';
+    // "McCarthy Hill, West Accra" — Eric's best-guess spelling in chat was
+    // "machatty west Accra"; McCarthy Hill is the well-known West Accra
+    // neighborhood near the Weija/Mallam area this most likely refers to.
+    // Worth Eric double-checking the spelling in Admin → Settings.
+    settings.address = 'McCarthy Hill, West Accra';
     settings.city = settings.city || 'Accra';
     settings.country = settings.country || 'Ghana';
     settings.phone = '055 339 3254 / 024 344 2262';
+    // Official school email, given directly by Eric.
+    settings.email = 'ababryan3@gmail.com';
+    // CEO name, given directly by Eric — replaces the "[CEO full name]"
+    // placeholder printed above the signature on every admission letter.
+    settings.ceoName = 'Rose Bryan-Okyere';
+    // CEO signature Eric shared directly — only filled in if still empty, so
+    // a re-run never clobbers a different signature he's since uploaded via
+    // Admin → Settings. Bundled into the repo (like the logo) so it ships
+    // with every deploy rather than depending on Render's ephemeral disk.
+    if (!settings.ceoSignatureUrl) {
+      settings.ceoSignatureUrl = '/uploads/signatures/rolen-ceo-signature-default.png';
+    }
 
     // Real "List of Materials" / "Fabrics Needed" flyer content, given
     // directly by Eric — only filled in if still empty, so a re-run never
@@ -161,18 +181,34 @@ async function run() {
     if (!settings.fabricsList || settings.fabricsList.length === 0) {
       settings.fabricsList = ['Cotton', 'Rayon', 'Chiffon', 'Plaid', 'Lace/ satin'];
     }
-    if (!settings.materialsNote) {
-      settings.materialsNote =
-        'NB: Fabrics should be brought as and when they will be needed.\nClasses are from Mondays to Wednesdays only every week.';
+    // Forced (not fill-if-empty) this round: the old note's "Classes are
+    // from Mondays to Wednesdays only every week" line is now superseded by
+    // the more accurate per-track scheduleText below (Beginner Mon–Wed,
+    // Advanced Thu–Fri) — leaving both would contradict each other on the
+    // same printed page, the same class of bug fixed earlier for tuition.
+    settings.materialsNote = 'NB: Fabrics should be brought as and when they will be needed.';
+    // Two-tier tuition, given directly by Eric — only filled in if still
+    // empty. Replaces the old single "Tuition for this program is GHS
+    // 7,000" auto line (see generateAdmissionLetter.js) since it now covers
+    // both tracks.
+    if (!settings.tuitionText) {
+      settings.tuitionText =
+        'Tuition for the Beginner class (6 months) is GHS 7,000. Tuition for the Advanced class (3 months) is GHS 10,000.';
     }
     // Real "Fees and Payment Schedule" flyer content, given directly by Eric.
     if (!settings.paymentScheduleText) {
       settings.paymentScheduleText =
         'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GHS 7,000.00).\n\nPayment Schedule: GHS 5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.';
     }
+    // Class days/times per track and the academic terms, given directly by
+    // Eric — only filled in if still empty.
+    if (!settings.scheduleText) {
+      settings.scheduleText =
+        'Beginner class: Monday – Wednesday, 9:00am – 2:00pm.\nAdvanced class: Thursday – Friday, 9:00am – 2:00pm.\n\nAcademic terms: March – September and September – March.';
+    }
 
     await settings.save();
-    console.log('Updated Settings address/phone/materials-fabrics-and-payment-schedule with real content.');
+    console.log('Updated Settings address/email/phone/ceo-name/signature/materials-fabrics/tuition/payment-schedule/class-schedule with real content.');
   } else {
     console.log('No Settings document found — run `npm run seed` first.');
   }

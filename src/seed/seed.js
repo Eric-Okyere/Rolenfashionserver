@@ -120,10 +120,24 @@ async function run() {
   if (settingsCount === 0) {
     await Settings.create({
       logoUrl: '/uploads/signatures/rolen-logo-default.png',
-      address: 'Weija-Accra',
+      // "McCarthy Hill, West Accra" — Eric's best-guess spelling in chat was
+      // "machatty west Accra"; McCarthy Hill is the well-known West Accra
+      // neighborhood near the Weija/Mallam area this most likely refers to.
+      // Worth Eric double-checking the spelling in Admin → Settings.
+      address: 'McCarthy Hill, West Accra',
       city: 'Accra',
       country: 'Ghana',
       phone: '055 339 3254 / 024 344 2262',
+      // Official school email, given directly by Eric.
+      email: 'ababryan3@gmail.com',
+      // CEO name, given directly by Eric — replaces the "[CEO full name]"
+      // placeholder printed above the signature on every admission letter.
+      ceoName: 'Rose Bryan-Okyere',
+      // CEO signature Eric shared directly — bundled into the repo (like the
+      // logo) so it ships with every deploy rather than depending on
+      // Render's ephemeral disk. Admin can replace it any time via
+      // Admin → Settings → Admission Letter & CEO Signature.
+      ceoSignatureUrl: '/uploads/signatures/rolen-ceo-signature-default.png',
       // WhatsApp is a separate number from the phone line(s) above and
       // hasn't been given yet — left blank rather than guessed. Set it in
       // Admin → Settings once known (the Contact page and the site-wide
@@ -149,12 +163,20 @@ async function run() {
         'Notebook',
       ],
       fabricsList: ['Cotton', 'Rayon', 'Chiffon', 'Plaid', 'Lace/ satin'],
-      materialsNote:
-        'NB: Fabrics should be brought as and when they will be needed.\nClasses are from Mondays to Wednesdays only every week.',
+      materialsNote: 'NB: Fabrics should be brought as and when they will be needed.',
+      // Two-tier tuition, given directly by Eric — replaces the old single
+      // "Tuition for this program is GHS 7,000" auto line (see
+      // generateAdmissionLetter.js), since it now covers both tracks.
+      tuitionText:
+        'Tuition for the Beginner class (6 months) is GHS 7,000. Tuition for the Advanced class (3 months) is GHS 10,000.',
       // Real "Fees and Payment Schedule" flyer content, given directly by
       // Eric — printed on the same admission-letter page as the materials list.
       paymentScheduleText:
         'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GHS 7,000.00).\n\nPayment Schedule: GHS 5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.',
+      // Class days/times per track and the academic terms, given directly by
+      // Eric — printed as its own section on admission letter page 2.
+      scheduleText:
+        'Beginner class: Monday – Wednesday, 9:00am – 2:00pm.\nAdvanced class: Thursday – Friday, 9:00am – 2:00pm.\n\nAcademic terms: March – September and September – March.',
     });
     console.log('Created default school settings — edit real details in Admin → Settings.');
   }
