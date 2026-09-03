@@ -258,6 +258,15 @@ async function generateAdmissionLetter({ application, course, settings }) {
       folder: 'rolen/letters',
       public_id: `${application.applicationNumber}.pdf`,
       overwrite: true,
+      // Cloudinary blocks public delivery of PDF/ZIP files by default on every
+      // account created since their 2024 security update, returning a 401 on
+      // the resulting URL even though the upload itself succeeds. This makes
+      // the intent explicit at upload time, but it's a belt-and-suspenders
+      // measure — the actual switch lives in the Cloudinary account's
+      // Settings → Security → "Restricted media types", which must have
+      // "PDF and ZIP files" unchecked/allowed. See the README's "Cloudinary
+      // for persistent file storage" section.
+      access_mode: 'public',
     });
     // Local copy was only ever a staging step for the Cloudinary upload —
     // clean it up so it doesn't sit on the (ephemeral anyway) disk.
