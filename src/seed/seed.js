@@ -142,6 +142,10 @@ async function run() {
       fabricsList: ['Cotton', 'Rayon', 'Chiffon', 'Plaid', 'Lace/ satin'],
       materialsNote:
         'NB: Fabrics should be brought as and when they will be needed.\nClasses are from Mondays to Wednesdays only every week.',
+      // Real "Fees and Payment Schedule" flyer content, given directly by
+      // Eric — printed on the same admission-letter page as the materials list.
+      paymentScheduleText:
+        'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GHS 7,000.00).\n\nPayment Schedule: GHS 5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.',
     });
     console.log('Created default school settings — edit real details in Admin → Settings.');
   }

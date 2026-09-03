@@ -1,4 +1,5 @@
 const Settings = require('../models/Settings');
+const { fileUrl } = require('../middleware/upload');
 
 async function getOrCreateSettings() {
   let settings = await Settings.findOne();
@@ -24,7 +25,7 @@ async function updateSettings(req, res) {
 async function uploadSignature(req, res) {
   if (!req.file) return res.status(400).json({ message: 'No file uploaded.' });
   const settings = await getOrCreateSettings();
-  settings.ceoSignatureUrl = `/uploads/signatures/${req.file.filename}`;
+  settings.ceoSignatureUrl = fileUrl(req.file, 'signatures');
   await settings.save();
   res.json({ settings });
 }
@@ -33,7 +34,7 @@ async function uploadSignature(req, res) {
 async function uploadLogo(req, res) {
   if (!req.file) return res.status(400).json({ message: 'No file uploaded.' });
   const settings = await getOrCreateSettings();
-  settings.logoUrl = `/uploads/signatures/${req.file.filename}`;
+  settings.logoUrl = fileUrl(req.file, 'signatures');
   await settings.save();
   res.json({ settings });
 }

@@ -5,6 +5,7 @@ const nextApplicationNumber = require('../utils/applicationNumber');
 const generateAdmissionLetter = require('../utils/generateAdmissionLetter');
 const logActivity = require('../utils/activityLog');
 const { notifyNewApplication } = require('../utils/whatsapp');
+const { fileUrl } = require('../middleware/upload');
 const fs = require('fs');
 const path = require('path');
 
@@ -19,7 +20,7 @@ async function submitApplication(req, res) {
     ...req.body,
     applicationNumber,
     status: 'pending',
-    photoUrl: req.file ? `/uploads/applications/${req.file.filename}` : undefined,
+    photoUrl: fileUrl(req.file, 'applications'),
   });
 
   await logActivity({
@@ -78,6 +79,13 @@ async function downloadLetter(req, res) {
   }
   if (application.status !== 'admitted' || !application.admissionLetterPath) {
     return res.status(400).json({ message: 'Admission letter is not available for this application.' });
+  }
+
+  // Cloudinary-hosted letters (the default once CLOUDINARY_* env vars are
+  // set — see generateAdmissionLetter.js) are just redirected to; only the
+  // local-disk fallback path needs to be read and streamed from here.
+  if (/^https?:\/\//i.test(application.admissionLetterPath)) {
+    return res.redirect(application.admissionLetterPath);
   }
 
   const filePath = path.join(__dirname, '..', '..', application.admissionLetterPath.replace(/^\/uploads/, 'uploads'));

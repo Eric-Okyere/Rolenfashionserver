@@ -37,6 +37,11 @@ const settingsSchema = new mongoose.Schema(
     materialsList: { type: [String], default: [] }, // e.g. "A set of curves", "Tape measure"...
     fabricsList: { type: [String], default: [] }, // e.g. "Cotton", "Rayon"...
     materialsNote: { type: String, default: '' }, // freeform note, e.g. when fabrics are needed / class days
+    // Printed on the same page (under "FEES AND PAYMENT SCHEDULE") — also
+    // admin-editable, also skipped when empty. Kept separate from the
+    // per-course fee/feeCurrency fields since this describes the schedule
+    // (deposit, installments) rather than just a headline amount.
+    paymentScheduleText: { type: String, default: '' },
   },
   { timestamps: true }
 );

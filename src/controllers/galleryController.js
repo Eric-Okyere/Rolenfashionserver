@@ -1,5 +1,6 @@
 const Gallery = require('../models/Gallery');
 const logActivity = require('../utils/activityLog');
+const { fileUrl } = require('../middleware/upload');
 
 // GET /api/gallery (public — published only unless admin ?all=1)
 async function listGallery(req, res) {
@@ -25,8 +26,8 @@ async function createGalleryItem(req, res) {
     category: req.body.category,
     price: req.body.price || undefined,
     isFeatured: req.body.isFeatured === 'true',
-    imageUrl: `/uploads/gallery/${imageFile.filename}`,
-    videoUrl: videoFile ? `/uploads/gallery/${videoFile.filename}` : undefined,
+    imageUrl: fileUrl(imageFile, 'gallery'),
+    videoUrl: videoFile ? fileUrl(videoFile, 'gallery') : undefined,
     uploadedBy: req.user._id,
   });
   await logActivity({

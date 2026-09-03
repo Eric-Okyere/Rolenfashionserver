@@ -2,6 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const { cloudinary, cloudinaryConfigured } = require('../config/cloudinary');
 
 const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
 
@@ -14,13 +15,55 @@ function safeName(originalName) {
   return `${Date.now()}-${random}${ext}`;
 }
 
-function makeStorage(subfolder) {
+// A minimal multer storage engine that streams the upload straight to
+// Cloudinary instead of local disk. Implements the same _handleFile/
+// _removeFile contract multer's built-in diskStorage does.
+class CloudinaryStorage {
+  constructor(folder, resourceTypeFor) {
+    this.folder = folder;
+    this.resourceTypeFor = typeof resourceTypeFor === 'function' ? resourceTypeFor : () => resourceTypeFor || 'image';
+  }
+
+  _handleFile(req, file, cb) {
+    const publicId = safeName(file.originalname).replace(path.extname(file.originalname), '');
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder: this.folder, resource_type: this.resourceTypeFor(file), public_id: publicId, overwrite: false },
+      (err, result) => {
+        if (err) return cb(err);
+        // `path` mirrors what diskStorage sets it to, so downstream code can
+        // treat both engines the same way (see fileUrl() below).
+        cb(null, { path: result.secure_url, filename: result.public_id, size: result.bytes });
+      }
+    );
+    file.stream.on('error', (err) => uploadStream.destroy(err));
+    file.stream.pipe(uploadStream);
+  }
+
+  _removeFile(req, file, cb) {
+    cloudinary.uploader.destroy(file.filename, { resource_type: this.resourceTypeFor(file) }, () => cb(null));
+  }
+}
+
+function makeStorage(subfolder, resourceTypeFor) {
+  if (cloudinaryConfigured) {
+    return new CloudinaryStorage(`rolen/${subfolder}`, resourceTypeFor);
+  }
   const dir = path.join(UPLOAD_ROOT, subfolder);
   fs.mkdirSync(dir, { recursive: true });
   return multer.diskStorage({
     destination: (req, file, cb) => cb(null, dir),
     filename: (req, file, cb) => cb(null, safeName(file.originalname)),
   });
+}
+
+// Turns a multer file object into the URL that should be saved on the
+// document — the Cloudinary secure_url when Cloudinary is configured
+// (CloudinaryStorage already put that in `file.path`), or the local
+// `/uploads/<subfolder>/<filename>` path served by app.js's static route.
+function fileUrl(file, subfolder) {
+  if (!file) return undefined;
+  if (file.path && /^https?:\/\//i.test(file.path)) return file.path;
+  return `/uploads/${subfolder}/${file.filename}`;
 }
 
 // A rejected file surfaces as a plain Error from multer's fileFilter — tag it
@@ -71,7 +114,7 @@ const uploadImage = multer({
 // paired with a product video ("video" field) — see gallery.routes.js, which
 // wires this up with .fields([{ name: 'image' }, { name: 'video' }]).
 const uploadGallery = multer({
-  storage: makeStorage('gallery'),
+  storage: makeStorage('gallery', (file) => (file.fieldname === 'video' ? 'video' : 'image')),
   limits: { fileSize: maxBytes },
   fileFilter: fileFilterByField({ image: ALLOWED_IMAGE, video: ALLOWED_VIDEO }),
 });
@@ -90,4 +133,11 @@ const uploadApplicationPhoto = multer({
   fileFilter: fileFilter(ALLOWED_IMAGE),
 });
 
-module.exports = { uploadImage, uploadGallery, uploadCourseImage, uploadApplicationPhoto, UPLOAD_ROOT };
+module.exports = {
+  uploadImage,
+  uploadGallery,
+  uploadCourseImage,
+  uploadApplicationPhoto,
+  UPLOAD_ROOT,
+  fileUrl,
+};

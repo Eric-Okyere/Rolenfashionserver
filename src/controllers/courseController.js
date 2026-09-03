@@ -1,5 +1,6 @@
 const Course = require('../models/Course');
 const logActivity = require('../utils/activityLog');
+const { fileUrl } = require('../middleware/upload');
 
 // GET /api/courses (public — published only, unless ?all=1 and authenticated admin)
 async function listCourses(req, res) {
@@ -61,7 +62,7 @@ async function setCourseImage(req, res) {
   if (!req.file) return res.status(400).json({ message: 'No image uploaded.' });
   const course = await Course.findByIdAndUpdate(
     req.params.id,
-    { image: `/uploads/courses/${req.file.filename}` },
+    { image: fileUrl(req.file, 'courses') },
     { new: true }
   );
   if (!course) return res.status(404).json({ message: 'Course not found.' });
