@@ -66,6 +66,41 @@ function fileUrl(file, subfolder) {
   return `/uploads/${subfolder}/${file.filename}`;
 }
 
+// Removes a previously-uploaded file (photo or video) given the URL that was
+// saved on a document — the counterpart to fileUrl() above, used when a
+// product/slide is deleted so its media doesn't linger in Cloudinary or on
+// local disk forever (Eric: "If a product is delete, delete the picture or
+// the video also from cloudinary"). Handles both storage engines the same
+// way callers already deal with URLs, so no caller needs to know which one
+// is active. Best-effort: logs and resolves rather than throwing, so a
+// storage hiccup never blocks the delete response the admin is waiting on.
+async function deleteUploadedFile(url) {
+  if (!url) return;
+  try {
+    if (/^https?:\/\//i.test(url)) {
+      // Cloudinary URL, e.g.
+      // https://res.cloudinary.com/<cloud>/video/upload/v169.../rolen/gallery/<id>.mp4
+      // The public_id Cloudinary's API wants is the folder + basename
+      // (no extension, no version segment) — "rolen/gallery/<id>" here.
+      const resourceType = /\/video\/upload\//.test(url) ? 'video' : 'image';
+      const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+(?:\?.*)?$/);
+      if (!match) return;
+      await cloudinary.uploader.destroy(match[1], { resource_type: resourceType });
+    } else {
+      // Local path, e.g. /uploads/gallery/169...-abcd.jpg
+      const relative = url.replace(/^\/uploads\//, '');
+      const filePath = path.join(UPLOAD_ROOT, relative);
+      if (!filePath.startsWith(UPLOAD_ROOT)) return; // guard against a malformed/traversal URL
+      await fs.promises.unlink(filePath).catch((err) => {
+        if (err.code !== 'ENOENT') throw err;
+      });
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(`deleteUploadedFile failed for ${url}:`, err.message);
+  }
+}
+
 // A rejected file surfaces as a plain Error from multer's fileFilter — tag it
 // with statusCode so the centralized error handler returns a clean 400 with
 // the real message instead of falling through to a generic 500.
@@ -153,4 +188,5 @@ module.exports = {
   uploadApplicationPhoto,
   UPLOAD_ROOT,
   fileUrl,
+  deleteUploadedFile,
 };

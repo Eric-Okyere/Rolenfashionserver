@@ -1,6 +1,6 @@
 const CarouselPost = require('../models/CarouselPost');
 const logActivity = require('../utils/activityLog');
-const { fileUrl } = require('../middleware/upload');
+const { fileUrl, deleteUploadedFile } = require('../middleware/upload');
 
 // GET /api/carousel (public — active only unless admin ?all=1)
 async function listCarouselPosts(req, res) {
@@ -58,6 +58,10 @@ async function updateCarouselPost(req, res) {
 async function deleteCarouselPost(req, res) {
   const post = await CarouselPost.findByIdAndDelete(req.params.id);
   if (!post) return res.status(404).json({ message: 'Slide not found.' });
+  // Same cleanup as Gallery product deletes (Eric asked for products
+  // specifically, but a carousel slide's photo/video was leaking in exactly
+  // the same way) — remove the slide's media from storage too.
+  await Promise.all([post.imageUrl, post.videoUrl].filter(Boolean).map(deleteUploadedFile));
   await logActivity({
     type: 'carousel.deleted',
     summary: `${req.user.name} deleted an ad carousel slide`,

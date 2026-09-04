@@ -1,6 +1,6 @@
 const Gallery = require('../models/Gallery');
 const logActivity = require('../utils/activityLog');
-const { fileUrl } = require('../middleware/upload');
+const { fileUrl, deleteUploadedFile } = require('../middleware/upload');
 
 // GET /api/gallery (public — published only unless admin ?all=1)
 async function listGallery(req, res) {
@@ -60,6 +60,12 @@ async function updateGalleryItem(req, res) {
 async function deleteGalleryItem(req, res) {
   const item = await Gallery.findByIdAndDelete(req.params.id);
   if (!item) return res.status(404).json({ message: 'Item not found.' });
+  // Eric: "If a product is delete, delete the picture or the video also from
+  // cloudinary" — otherwise every deleted product left its photos/video
+  // behind forever. Runs after the response-critical delete so a storage
+  // hiccup here (already best-effort/non-throwing inside the helper) can
+  // never block or fail the admin's delete action.
+  await Promise.all([...(item.imageUrls || []), item.videoUrl].filter(Boolean).map(deleteUploadedFile));
   await logActivity({
     type: 'gallery.deleted',
     summary: `${req.user.name} deleted product: ${item.title}`,
