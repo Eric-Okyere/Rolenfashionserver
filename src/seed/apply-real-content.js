@@ -15,6 +15,15 @@ const mongoose = require('mongoose');
 const connectDB = require('../config/db');
 const Course = require('../models/Course');
 const Settings = require('../models/Settings');
+const { normalizeMapEmbedUrl } = require('../utils/mapUrl');
+
+// The share link Eric sent for the campus location — copied straight from
+// the Google Maps app's Share button. Resolved/converted into a working
+// `output=embed` URL below via normalizeMapEmbedUrl() (same conversion that
+// now happens automatically for anything pasted into Admin → Settings'
+// "Campus Map" field going forward — see mapUrl.js for why the raw link
+// can't be used directly in an <iframe>).
+const CAMPUS_MAP_LINK = 'https://maps.app.goo.gl/21JXhDNBNHakXVuK9?g_st=aw';
 
 const PLACEHOLDER_TITLES = [
   'Diploma in Fashion Design',
@@ -148,6 +157,18 @@ async function run() {
     // with every deploy rather than depending on Render's ephemeral disk.
     if (!settings.ceoSignatureUrl) {
       settings.ceoSignatureUrl = '/uploads/signatures/rolen-ceo-signature-default.png';
+    }
+    // Campus map link, given directly by Eric — only filled in if still
+    // empty, so a re-run never clobbers a different map link/address he's
+    // since set in Admin → Settings. Converted to a working embeddable URL
+    // here (rather than storing the raw share link) since this script talks
+    // to the real internet (unlike the sandbox this was built in), so it can
+    // actually resolve it — if that resolution fails for any reason (the
+    // link changed, a network hiccup), it falls back to storing the raw
+    // link rather than losing it, same as the live Admin → Settings save
+    // path does.
+    if (!settings.mapEmbedUrl) {
+      settings.mapEmbedUrl = await normalizeMapEmbedUrl(CAMPUS_MAP_LINK);
     }
 
     // Real "List of Materials" / "Fabrics Needed" flyer content, given

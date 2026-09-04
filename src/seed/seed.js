@@ -8,6 +8,12 @@ const User = require('../models/User');
 const Course = require('../models/Course');
 const Settings = require('../models/Settings');
 const Testimonial = require('../models/Testimonial');
+const { normalizeMapEmbedUrl } = require('../utils/mapUrl');
+
+// Share link Eric sent for the campus location, copied from the Google Maps
+// app's Share button — converted into a working `output=embed` URL below
+// (see mapUrl.js for why the raw share link can't be used directly).
+const CAMPUS_MAP_LINK = 'https://maps.app.goo.gl/21JXhDNBNHakXVuK9?g_st=aw';
 
 // Rolen's real program structure, as given directly by the school's
 // co-owner: students don't pick one subject out of several — every student
@@ -84,7 +90,9 @@ async function run() {
   // Settings singleton
   const settingsCount = await Settings.countDocuments();
   if (settingsCount === 0) {
+    const mapEmbedUrl = await normalizeMapEmbedUrl(CAMPUS_MAP_LINK);
     await Settings.create({
+      mapEmbedUrl,
       logoUrl: '/uploads/signatures/rolen-logo-default.png',
       // "McCarthy Hill, West Accra" — Eric's best-guess spelling in chat was
       // "machatty west Accra"; McCarthy Hill is the well-known West Accra
