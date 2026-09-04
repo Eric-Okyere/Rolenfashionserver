@@ -22,10 +22,35 @@ function isEmbeddableUrl(value) {
   return /\/maps\/embed(\?|$)/.test(value) || /[?&]output=embed(&|$)/.test(value);
 }
 
+// A real desktop Chrome UA string. Google's short-link redirector
+// (maps.app.goo.gl links are Firebase Dynamic Links under the hood) can
+// serve a different response to an unrecognized/bot-looking User-Agent —
+// sometimes an HTML "interstitial" page with a JS/meta-refresh redirect
+// instead of a clean HTTP 3xx — so presenting as an ordinary browser gets
+// the plain-redirect behavior far more reliably.
+const BROWSER_USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
+// Pulls a redirect target out of an HTML body when there was no Location
+// header to follow — covers the interstitial-page case mentioned above:
+// <meta http-equiv="refresh" content="0;url=https://...">, or a bare
+// canonical/og:url link to the real maps.google.com page.
+function findUrlInHtml(html) {
+  const metaRefresh = html.match(/<meta[^>]+http-equiv=["']?refresh["']?[^>]+content=["'][^;]*;\s*url=([^"'>]+)["']/i);
+  if (metaRefresh) return metaRefresh[1];
+  const canonical = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
+  if (canonical) return canonical[1];
+  const ogUrl = html.match(/<meta[^>]+property=["']og:url["'][^>]+content=["']([^"']+)["']/i);
+  if (ogUrl) return ogUrl[1];
+  return null;
+}
+
 // Follows HTTP redirects manually (rather than relying on a library) so we
 // only ever need the *final URL* a short link resolves to — the coordinates
-// or place name we need are encoded in that URL itself, so there's no need
-// to fetch/parse the destination page's body at all.
+// or place name we need are encoded in that URL itself. Falls back to
+// scanning the response body for a redirect (see findUrlInHtml) when a hop
+// doesn't send a clean Location header, which Google's short-link service
+// sometimes does instead of a plain HTTP redirect.
 function resolveFinalUrl(startUrl, maxRedirects = 8) {
   return new Promise((resolve, reject) => {
     const attempt = (currentUrl, redirectsLeft) => {
@@ -44,20 +69,40 @@ function resolveFinalUrl(startUrl, maxRedirects = 8) {
           hostname: parsed.hostname,
           port: parsed.port || undefined,
           path: parsed.pathname + parsed.search,
-          // Google's short-link redirector behaves inconsistently for
-          // non-browser user agents, so we present as a normal browser.
-          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RolenSchoolSite/1.0)' },
+          headers: {
+            'User-Agent': BROWSER_USER_AGENT,
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          },
           timeout: 8000,
         },
         (res) => {
-          res.resume(); // discard body — we only need the URL/status
           const location = res.headers.location;
           if (location && res.statusCode >= 300 && res.statusCode < 400) {
+            res.resume();
             if (redirectsLeft <= 0) return reject(new Error('Too many redirects resolving map link.'));
             const nextUrl = new URL(location, currentUrl).toString();
             return attempt(nextUrl, redirectsLeft - 1);
           }
-          resolve(currentUrl);
+          // No redirect header — before settling on this as the final URL,
+          // check whether it's already embeddable/has what we need in its
+          // own URL; if not, read a bit of the body in case it's an
+          // interstitial page pointing further on via HTML/meta-refresh.
+          if (isEmbeddableUrl(currentUrl) || extractFromLongUrl(currentUrl)) {
+            res.resume();
+            return resolve(currentUrl);
+          }
+          let body = '';
+          res.on('data', (chunk) => {
+            if (body.length < 50000) body += chunk;
+          });
+          res.on('end', () => {
+            const found = findUrlInHtml(body);
+            if (found && redirectsLeft > 0) {
+              const nextUrl = new URL(found, currentUrl).toString();
+              return attempt(nextUrl, redirectsLeft - 1);
+            }
+            resolve(currentUrl);
+          });
         }
       );
       req.on('timeout', () => req.destroy(new Error('Timed out resolving map link.')));
@@ -86,6 +131,17 @@ function extractFromLongUrl(longUrl) {
     }
   }
   return null;
+}
+
+// Builds a working embed URL directly from address-like text — no network
+// call, so it can never fail the way resolving a share link can. Used as
+// the final safety net in settingsController: if a pasted Maps link
+// couldn't be turned into something embeddable for any reason, the Contact
+// page still gets a real map instead of a blank box.
+function buildAddressEmbedUrl(parts) {
+  const query = (parts || []).filter(Boolean).join(', ').trim();
+  if (!query) return null;
+  return `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
 }
 
 // Main entry point — called from settingsController.updateSettings whenever
@@ -139,4 +195,10 @@ async function normalizeMapEmbedUrl(input) {
   return finalUrl;
 }
 
-module.exports = { normalizeMapEmbedUrl, isEmbeddableUrl, extractFromLongUrl, resolveFinalUrl };
+module.exports = {
+  normalizeMapEmbedUrl,
+  isEmbeddableUrl,
+  extractFromLongUrl,
+  resolveFinalUrl,
+  buildAddressEmbedUrl,
+};

@@ -15,7 +15,7 @@ const mongoose = require('mongoose');
 const connectDB = require('../config/db');
 const Course = require('../models/Course');
 const Settings = require('../models/Settings');
-const { normalizeMapEmbedUrl } = require('../utils/mapUrl');
+const { normalizeMapEmbedUrl, isEmbeddableUrl, buildAddressEmbedUrl } = require('../utils/mapUrl');
 
 // The share link Eric sent for the campus location — copied straight from
 // the Google Maps app's Share button. Resolved/converted into a working
@@ -167,8 +167,21 @@ async function run() {
     // link changed, a network hiccup), it falls back to storing the raw
     // link rather than losing it, same as the live Admin → Settings save
     // path does.
-    if (!settings.mapEmbedUrl) {
-      settings.mapEmbedUrl = await normalizeMapEmbedUrl(CAMPUS_MAP_LINK);
+    // Re-check embeddability, not just presence: an earlier version of this
+    // migration (and an earlier manual paste in Admin → Settings, before the
+    // auto-conversion existed) could have left the *raw*, non-embeddable
+    // share link stored — `!settings.mapEmbedUrl` alone would treat that as
+    // "already set" and skip it forever, so this only leaves a value alone
+    // once it's actually something Google will render.
+    if (!settings.mapEmbedUrl || !isEmbeddableUrl(settings.mapEmbedUrl)) {
+      const resolved = await normalizeMapEmbedUrl(CAMPUS_MAP_LINK);
+      settings.mapEmbedUrl = isEmbeddableUrl(resolved)
+        ? resolved
+        // Resolving the share link didn't produce anything embeddable in
+        // this environment (e.g. this sandbox has no route to Google's
+        // servers at all) — fall back to the known campus address so the
+        // Contact page still gets a working map either way.
+        : buildAddressEmbedUrl([settings.address, settings.city, settings.country]) || resolved;
     }
 
     // Real "List of Materials" / "Fabrics Needed" flyer content, given
