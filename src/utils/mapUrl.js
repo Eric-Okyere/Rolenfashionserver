@@ -3,20 +3,32 @@
 // <iframe>. Eric's actual attempt ("fix the map link so it works") was a
 // share link copied straight from the Google Maps app —
 // https://maps.app.goo.gl/xxxxxxx — which looks like a normal link but
-// Google's regular maps.google.com pages (and the short link that redirects
-// to one) refuse to be framed (X-Frame-Options), so dropping it straight
-// into an <iframe src> just shows a blank/broken box. The only URL shape
-// Google actually allows in an iframe without an API key is the
-// `output=embed` form, e.g. https://www.google.com/maps?q=<place>&output=embed
-// — this file converts a pasted share link, a full (non-embed) Maps URL, or
-// even a plain typed address into that form automatically, so admins never
-// need to know the difference.
+// Google's regular Maps web app (www.google.com/maps, and the short link
+// that redirects to it) sends response headers that refuse to let it be
+// framed, so dropping it straight into an <iframe src> just shows a blank/
+// broken box, or Chrome's own "refused to connect" page. The one host that
+// still allows the keyless `output=embed` trick in an iframe is the legacy
+// `maps.google.com` front door (NOT `www.google.com` — that distinction is
+// exactly what caused a first attempt at this fix to still fail: it built
+// the right query string on the wrong host) — see EMBED_HOST below. This
+// file converts a pasted share link, a full (non-embed) Maps URL, or even a
+// plain typed address into a working `maps.google.com/maps?...&output=embed`
+// URL automatically, so admins never need to know any of this.
 const http = require('http');
 const https = require('https');
 const { URL } = require('url');
 
 // Google's own short-link domains for shared map pins.
 const SHORT_LINK_HOSTS = new Set(['maps.app.goo.gl', 'goo.gl']);
+
+// The one host Google still allows in an <iframe> for a keyless, no-API-key
+// embed. `www.google.com/maps` (the current Maps web app) actively refuses
+// to be framed — that's the "refused to connect" Eric saw.
+const EMBED_HOST = 'maps.google.com';
+
+function buildEmbedUrl(query, extraParams = '') {
+  return `https://${EMBED_HOST}/maps?q=${encodeURIComponent(query)}${extraParams}&output=embed`;
+}
 
 function isEmbeddableUrl(value) {
   return /\/maps\/embed(\?|$)/.test(value) || /[?&]output=embed(&|$)/.test(value);
@@ -141,7 +153,7 @@ function extractFromLongUrl(longUrl) {
 function buildAddressEmbedUrl(parts) {
   const query = (parts || []).filter(Boolean).join(', ').trim();
   if (!query) return null;
-  return `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
+  return buildEmbedUrl(query);
 }
 
 // Main entry point — called from settingsController.updateSettings whenever
@@ -153,9 +165,23 @@ async function normalizeMapEmbedUrl(input) {
   const trimmed = (input || '').trim();
   if (!trimmed) return trimmed;
 
-  // Already a working embed URL (or the admin pasted a full <iframe> embed
-  // snippet some other tool generated) — leave it alone.
-  if (isEmbeddableUrl(trimmed)) return trimmed;
+  // Already a working embed URL. Self-heal one specific bad shape: an
+  // earlier version of this file built the query correctly but on the
+  // wrong host (www.google.com, which refuses to be framed) — rewrite that
+  // host to the one that actually works rather than leaving it broken
+  // forever just because it happens to already contain "output=embed".
+  if (isEmbeddableUrl(trimmed)) {
+    try {
+      const parsed = new URL(trimmed);
+      if (parsed.hostname === 'www.google.com' && parsed.pathname === '/maps') {
+        parsed.hostname = EMBED_HOST;
+        return parsed.toString();
+      }
+    } catch (err) {
+      // Not a URL we can parse (e.g. a raw <iframe> snippet) — leave as-is.
+    }
+    return trimmed;
+  }
 
   const looksLikeUrl = /^https?:\/\//i.test(trimmed);
 
@@ -163,7 +189,7 @@ async function normalizeMapEmbedUrl(input) {
   // build the embed directly. This also covers the very common case of an
   // admin typing/pasting the campus address instead of a Maps link at all.
   if (!looksLikeUrl) {
-    return `https://www.google.com/maps?q=${encodeURIComponent(trimmed)}&output=embed`;
+    return buildEmbedUrl(trimmed);
   }
 
   let finalUrl = trimmed;
@@ -183,10 +209,10 @@ async function normalizeMapEmbedUrl(input) {
 
   const extracted = extractFromLongUrl(finalUrl);
   if (extracted?.lat && extracted?.lng) {
-    return `https://www.google.com/maps?q=${extracted.lat},${extracted.lng}&z=16&output=embed`;
+    return buildEmbedUrl(`${extracted.lat},${extracted.lng}`, '&z=16');
   }
   if (extracted?.query) {
-    return `https://www.google.com/maps?q=${encodeURIComponent(extracted.query)}&output=embed`;
+    return buildEmbedUrl(extracted.query);
   }
 
   // Nothing embeddable could be pulled out — return whatever we resolved to

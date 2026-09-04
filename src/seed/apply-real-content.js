@@ -17,13 +17,18 @@ const Course = require('../models/Course');
 const Settings = require('../models/Settings');
 const { normalizeMapEmbedUrl, isEmbeddableUrl, buildAddressEmbedUrl } = require('../utils/mapUrl');
 
-// The share link Eric sent for the campus location — copied straight from
-// the Google Maps app's Share button. Resolved/converted into a working
-// `output=embed` URL below via normalizeMapEmbedUrl() (same conversion that
-// now happens automatically for anything pasted into Admin → Settings'
-// "Campus Map" field going forward — see mapUrl.js for why the raw link
-// can't be used directly in an <iframe>).
-const CAMPUS_MAP_LINK = 'https://maps.app.goo.gl/21JXhDNBNHakXVuK9?g_st=aw';
+// Eric first sent a maps.app.goo.gl share link for the campus location, then
+// — once the map still wasn't showing — a full Google Maps URL with the
+// exact pin coordinates baked in (@5.557844,-0.308912). Using that directly
+// here instead of the share link means this constant needs zero network
+// resolution to become a working embed: extractFromLongUrl() in mapUrl.js
+// pulls the coordinates straight out of the URL text, so normalizeMapEmbedUrl()
+// below never has to touch the network for the seeded default at all — more
+// robust than depending on a short link's redirect chain resolving
+// correctly (see "Campus map" rounds in the project doc for why that
+// mattered).
+const CAMPUS_MAP_LINK =
+  'https://www.google.com/maps/dir//5.557844,-0.308912/@5.557844,-0.308912,1185m/data=!3m1!1e3!4m6!1m5!3m4!2zNcKwMzMnMjguMiJOIDDCsDE4JzMyLjEiVw!8m2!3d5.557844!4d-0.308912!18m1!1e1';
 
 const PLACEHOLDER_TITLES = [
   'Diploma in Fashion Design',

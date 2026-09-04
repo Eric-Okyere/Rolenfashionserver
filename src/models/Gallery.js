@@ -8,7 +8,39 @@ const gallerySchema = new mongoose.Schema(
     // shown alongside it (not a replacement for the image).
     imageUrl: { type: String, required: true }, // /uploads/gallery/<file>
     videoUrl: { type: String }, // /uploads/gallery/<file>, optional
-    category: { type: String, enum: ['Ready-to-Wear', 'Bridal', 'Accessories', 'Student Work', 'Runway', 'Other'], default: 'Other' },
+    // The shop's current, finalized brand-line structure, given directly by
+    // Eric from his own naming/tagline session: Rolen Kente, Rolen Bridals,
+    // Rolen Custom, Rolen Ready-to-Wear, and Rolen Bespoke — these are the
+    // only options offered in the public shop filter and the admin
+    // "Post a Product" form going forward. Every older category value
+    // (including the previous "Nuptials / Kente / Exclusives / Melange by
+    // Rolen" round, and the original generic values before that:
+    // Ready-to-Wear, Bridal, Accessories, Student Work, Runway) is kept in
+    // the enum — not removed — purely so any already-saved product with one
+    // of those values doesn't fail validation the next time an admin edits/
+    // saves it; same "don't break existing records" pattern used for
+    // Application.gender and the retired standalone-subject courses.
+    category: {
+      type: String,
+      enum: [
+        'Rolen Kente',
+        'Rolen Bridals',
+        'Rolen Custom',
+        'Rolen Ready-to-Wear',
+        'Rolen Bespoke',
+        'Other',
+        'Nuptials',
+        'Kente',
+        'Exclusives',
+        'Melange by Rolen',
+        'Ready-to-Wear',
+        'Bridal',
+        'Accessories',
+        'Student Work',
+        'Runway',
+      ],
+      default: 'Other',
+    },
     price: { type: Number }, // optional, if the item is for sale
     isFeatured: { type: Boolean, default: false },
     isPublished: { type: Boolean, default: true },

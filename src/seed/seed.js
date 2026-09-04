@@ -10,10 +10,11 @@ const Settings = require('../models/Settings');
 const Testimonial = require('../models/Testimonial');
 const { normalizeMapEmbedUrl, isEmbeddableUrl, buildAddressEmbedUrl } = require('../utils/mapUrl');
 
-// Share link Eric sent for the campus location, copied from the Google Maps
-// app's Share button — converted into a working `output=embed` URL below
-// (see mapUrl.js for why the raw share link can't be used directly).
-const CAMPUS_MAP_LINK = 'https://maps.app.goo.gl/21JXhDNBNHakXVuK9?g_st=aw';
+// A full Google Maps URL with the exact campus pin coordinates baked in
+// (@5.557844,-0.308912) — see the matching comment in apply-real-content.js
+// for why this is used instead of the original maps.app.goo.gl share link.
+const CAMPUS_MAP_LINK =
+  'https://www.google.com/maps/dir//5.557844,-0.308912/@5.557844,-0.308912,1185m/data=!3m1!1e3!4m6!1m5!3m4!2zNcKwMzMnMjguMiJOIDDCsDE4JzMyLjEiVw!8m2!3d5.557844!4d-0.308912!18m1!1e1';
 
 // Rolen's real program structure, as given directly by the school's
 // co-owner: students don't pick one subject out of several — every student
