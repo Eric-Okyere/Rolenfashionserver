@@ -14,19 +14,23 @@ async function listGallery(req, res) {
   res.json({ items });
 }
 
-// POST /api/gallery (admin) — after upload middleware sets req.files.image / req.files.video
+// POST /api/gallery (admin) — after upload middleware sets req.files.images (1-5) / req.files.video
 async function createGalleryItem(req, res) {
-  const imageFile = req.files?.image?.[0];
+  const imageFiles = req.files?.images || [];
   const videoFile = req.files?.video?.[0];
-  if (!imageFile) return res.status(400).json({ message: 'A product photo is required.' });
+  if (!imageFiles.length) return res.status(400).json({ message: 'At least one product photo is required.' });
+  if (imageFiles.length > 5) return res.status(400).json({ message: 'A product can have at most 5 photos.' });
+
+  const imageUrls = imageFiles.map((f) => fileUrl(f, 'gallery'));
 
   const item = await Gallery.create({
-    title: req.body.title || imageFile.originalname,
+    title: req.body.title || imageFiles[0].originalname,
     description: req.body.description,
     category: req.body.category,
     price: req.body.price || undefined,
     isFeatured: req.body.isFeatured === 'true',
-    imageUrl: fileUrl(imageFile, 'gallery'),
+    imageUrl: imageUrls[0],
+    imageUrls,
     videoUrl: videoFile ? fileUrl(videoFile, 'gallery') : undefined,
     uploadedBy: req.user._id,
   });

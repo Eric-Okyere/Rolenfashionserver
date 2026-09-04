@@ -12,7 +12,7 @@ router.post(
   protect,
   authorize('admin', 'staff'),
   uploadGallery.fields([
-    { name: 'image', maxCount: 1 },
+    { name: 'images', maxCount: 5 },
     { name: 'video', maxCount: 1 },
   ]),
   ctrl.createGalleryItem

@@ -110,11 +110,22 @@ const uploadImage = multer({
   fileFilter: fileFilter(ALLOWED_IMAGE),
 });
 
-// Gallery/shop products: a required product photo ("image" field) optionally
-// paired with a product video ("video" field) — see gallery.routes.js, which
-// wires this up with .fields([{ name: 'image' }, { name: 'video' }]).
+// Gallery/shop products: 1-5 product photos ("images" field, see Eric: "Product
+// post can have a video and five pictures") optionally paired with a product
+// video ("video" field) — see gallery.routes.js, which wires this up with
+// .fields([{ name: 'images', maxCount: 5 }, { name: 'video' }]).
 const uploadGallery = multer({
   storage: makeStorage('gallery', (file) => (file.fieldname === 'video' ? 'video' : 'image')),
+  limits: { fileSize: maxBytes },
+  fileFilter: fileFilterByField({ images: ALLOWED_IMAGE, video: ALLOWED_VIDEO }),
+});
+
+// Homepage ad carousel slides — a separate content type from Gallery products
+// (see models/CarouselPost.js). Each slide is one photo OR one video, never
+// both, but both fields are wired up here so either can arrive; the
+// controller enforces that at least one is present.
+const uploadCarousel = multer({
+  storage: makeStorage('carousel', (file) => (file.fieldname === 'video' ? 'video' : 'image')),
   limits: { fileSize: maxBytes },
   fileFilter: fileFilterByField({ image: ALLOWED_IMAGE, video: ALLOWED_VIDEO }),
 });
@@ -137,6 +148,7 @@ const uploadApplicationPhoto = multer({
 module.exports = {
   uploadImage,
   uploadGallery,
+  uploadCarousel,
   uploadCourseImage,
   uploadApplicationPhoto,
   UPLOAD_ROOT,

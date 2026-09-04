@@ -5,8 +5,25 @@ const gallerySchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
     // Every product needs a photo; the video is an optional companion clip
-    // shown alongside it (not a replacement for the image).
+    // shown alongside it (not a replacement for the image). `imageUrl` is
+    // kept as the single "cover" photo — every existing consumer (grid
+    // thumbnails, category cover art, admin list) reads just this field, so
+    // it stays populated exactly as before (the first uploaded photo).
     imageUrl: { type: String, required: true }, // /uploads/gallery/<file>
+    // Eric: "Product post can have a video and five pictures." — the full
+    // set of up to 5 photos for browsing in the product lightbox.
+    // `imageUrl` above is always `imageUrls[0]`; older products created
+    // before this field existed simply have an empty array here, and
+    // GalleryItem.js falls back to just `imageUrl` in that case — nothing
+    // needed migrating.
+    imageUrls: {
+      type: [String],
+      validate: {
+        validator: (arr) => arr.length <= 5,
+        message: 'A product can have at most 5 photos.',
+      },
+      default: [],
+    },
     videoUrl: { type: String }, // /uploads/gallery/<file>, optional
     // The shop's current, finalized brand-line structure, given directly by
     // Eric from his own naming/tagline session: Rolen Kente, Rolen Bridals,
