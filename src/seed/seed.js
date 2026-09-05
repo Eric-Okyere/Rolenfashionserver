@@ -145,7 +145,8 @@ async function run() {
         'Notebook',
       ],
       fabricsList: ['Cotton', 'Rayon', 'Chiffon', 'Plaid', 'Lace/ satin'],
-      materialsNote: 'NB: Fabrics should be brought as and when they will be needed.',
+      materialsNote:
+        'NB: Fabrics should be brought as and when they will be needed. School will provide pattern kits.',
       // Two-tier tuition, given directly by Eric — replaces the old single
       // "Tuition for this program is GHS 7,000" auto line (see
       // generateAdmissionLetter.js), since it now covers both tracks.
@@ -154,7 +155,10 @@ async function run() {
       // Real "Fees and Payment Schedule" flyer content, given directly by
       // Eric — printed on the same admission-letter page as the materials list.
       paymentScheduleText:
-        'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GHS 7,000.00).\n\nPayment Schedule: GHS 5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.',
+        'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GHS 7,000.00).\n\n' +
+        'Payment Schedule: GHS 5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.\n\n' +
+        'For the Advanced Class, the duration is Three (3) months. The cost is Ten Thousand Ghana Cedis (GHS 10,000.00).\n\n' +
+        'Payment Schedule: GHS 7,000.00 payable before commencement of class.',
       // Class days/times per track and the academic terms, given directly by
       // Eric — printed as its own section on admission letter page 2.
       scheduleText:

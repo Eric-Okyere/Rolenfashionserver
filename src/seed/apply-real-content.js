@@ -220,7 +220,10 @@ async function run() {
     // the more accurate per-track scheduleText below (Beginner Mon–Wed,
     // Advanced Thu–Fri) — leaving both would contradict each other on the
     // same printed page, the same class of bug fixed earlier for tuition.
-    settings.materialsNote = 'NB: Fabrics should be brought as and when they will be needed.';
+    // Eric later asked to add "School will provide pattern kits" under this
+    // note — appended as its own sentence, forced again for the same reason.
+    settings.materialsNote =
+      'NB: Fabrics should be brought as and when they will be needed. School will provide pattern kits.';
     // Two-tier tuition, given directly by Eric — only filled in if still
     // empty. Replaces the old single "Tuition for this program is GHS
     // 7,000" auto line (see generateAdmissionLetter.js) since it now covers
@@ -230,10 +233,16 @@ async function run() {
         'Tuition for the Beginner class (6 months) is GHS 7,000. Tuition for the Advanced class (3 months) is GHS 10,000.';
     }
     // Real "Fees and Payment Schedule" flyer content, given directly by Eric.
-    if (!settings.paymentScheduleText) {
-      settings.paymentScheduleText =
-        'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GHS 7,000.00).\n\nPayment Schedule: GHS 5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.';
-    }
+    // Forced (not fill-if-empty) this specific round, same one-time-exception
+    // pattern as materialsNote above: Eric asked directly, in this
+    // conversation, to add the Advanced Class's fee/payment-schedule
+    // paragraph alongside the existing Beginners one, so this needs to
+    // overwrite whatever's already live (which only ever had Beginners).
+    settings.paymentScheduleText =
+      'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GHS 7,000.00).\n\n' +
+      'Payment Schedule: GHS 5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.\n\n' +
+      'For the Advanced Class, the duration is Three (3) months. The cost is Ten Thousand Ghana Cedis (GHS 10,000.00).\n\n' +
+      'Payment Schedule: GHS 7,000.00 payable before commencement of class.';
     // Class days/times per track and the academic terms, given directly by
     // Eric — only filled in if still empty.
     if (!settings.scheduleText) {
