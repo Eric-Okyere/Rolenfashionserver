@@ -109,7 +109,15 @@ async function run() {
       address: 'McCarthy Hill, West Accra',
       city: 'Accra',
       country: 'Ghana',
-      phone: '055 339 3254 / 024 344 2262',
+      // Two genuinely different numbers, given directly by Eric: 055 339
+      // 3254 is the plain phone line, 024 344 2262 is WhatsApp-only — kept
+      // in their own fields (not both crammed into `phone`) so the site
+      // shows each under its own Call/WhatsApp label instead of mislabeling
+      // the WhatsApp number as a regular call line. The Contact page and
+      // the site-wide WhatsApp button both already read `whatsapp`
+      // independently of `phone`.
+      phone: '055 339 3254',
+      whatsapp: '024 344 2262',
       // Official school email, given directly by Eric.
       email: 'ababryan3@gmail.com',
       // CEO name, given directly by Eric — replaces the "[CEO full name]"
@@ -120,10 +128,6 @@ async function run() {
       // Render's ephemeral disk. Admin can replace it any time via
       // Admin → Settings → Admission Letter & CEO Signature.
       ceoSignatureUrl: '/uploads/signatures/rolen-ceo-signature-default.png',
-      // WhatsApp is a separate number from the phone line(s) above and
-      // hasn't been given yet — left blank rather than guessed. Set it in
-      // Admin → Settings once known (the Contact page and the site-wide
-      // WhatsApp button both read from this field independently of `phone`).
       // Real "List of Materials" / "Fabrics Needed" flyer content, given
       // directly by Eric — printed as page 2 of every admission letter.
       materialsList: [

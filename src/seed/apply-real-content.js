@@ -136,11 +136,9 @@ async function run() {
     }
   }
 
-  // Update only address/phone on the Settings singleton — everything else
-  // Eric has already set (school name, tagline, logo, socials, whatsapp,
-  // etc.) stays untouched. WhatsApp is a separate number from `phone` and
-  // hasn't been given yet, so this migration deliberately does not touch
-  // `whatsapp` — set it directly in Admin → Settings once known.
+  // Update only address/phone/whatsapp on the Settings singleton —
+  // everything else Eric has already set (school name, tagline, logo,
+  // socials, etc.) stays untouched.
   const settings = await Settings.findOne();
   if (settings) {
     // "McCarthy Hill, West Accra" — Eric's best-guess spelling in chat was
@@ -150,7 +148,15 @@ async function run() {
     settings.address = 'McCarthy Hill, West Accra';
     settings.city = settings.city || 'Accra';
     settings.country = settings.country || 'Ghana';
-    settings.phone = '055 339 3254 / 024 344 2262';
+    // Two genuinely different numbers, given directly by Eric: 055 339 3254
+    // is the plain phone line, 024 344 2262 is WhatsApp-only. Originally
+    // both were lumped into `phone` (with `whatsapp` left blank) — Eric
+    // later clarified they're separate, so this now corrects live data by
+    // splitting them into their own fields, forced (not fill-if-empty) the
+    // same one-time-exception way as email/ceoName above, since this needs
+    // to overwrite whatever combined value is already live.
+    settings.phone = '055 339 3254';
+    settings.whatsapp = '024 344 2262';
     // Official school email, given directly by Eric.
     settings.email = 'ababryan3@gmail.com';
     // CEO name, given directly by Eric — replaces the "[CEO full name]"
@@ -251,7 +257,7 @@ async function run() {
     }
 
     await settings.save();
-    console.log('Updated Settings address/email/phone/ceo-name/signature/materials-fabrics/tuition/payment-schedule/class-schedule with real content.');
+    console.log('Updated Settings address/email/phone/whatsapp/ceo-name/signature/materials-fabrics/tuition/payment-schedule/class-schedule with real content.');
   } else {
     console.log('No Settings document found — run `npm run seed` first.');
   }
