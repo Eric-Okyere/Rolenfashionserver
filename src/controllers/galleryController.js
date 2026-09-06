@@ -1,5 +1,6 @@
 const Gallery = require('../models/Gallery');
 const logActivity = require('../utils/activityLog');
+const { notifyOrderInterest } = require('../utils/whatsapp');
 const { fileUrl, deleteUploadedFile } = require('../middleware/upload');
 
 // GET /api/gallery (public — published only unless admin ?all=1)
@@ -74,4 +75,31 @@ async function deleteGalleryItem(req, res) {
   res.json({ message: 'Deleted.' });
 }
 
-module.exports = { listGallery, createGalleryItem, updateGalleryItem, deleteGalleryItem };
+// POST /api/gallery/:id/order-click (public) — fired the moment a shopper
+// taps "Order via WhatsApp" on a product (see GalleryItem.js), at the same
+// time that tap opens the shopper's own WhatsApp chat to the school. Eric:
+// "If a customer wants to buy a product, let admin receives whatsapp
+// notifications" — the chat itself already reaches the school's WhatsApp
+// number directly (Settings.whatsapp), but this is what lets Eric also get
+// a WhatsApp *alert* about it (via Meta's Cloud API) without having to
+// watch that chat, same as the other activity notifications below. Never
+// blocks or fails the shopper's flow either way — it fires right alongside
+// the wa.me link opening, not before it.
+async function recordOrderClick(req, res) {
+  const item = await Gallery.findById(req.params.id);
+  if (!item) return res.status(404).json({ message: 'Item not found.' });
+
+  await logActivity({
+    type: 'gallery.order_clicked',
+    summary: `Order interest: ${item.title}`,
+    meta: { itemId: item._id },
+  });
+
+  // Fire-and-forget (not awaited) so a slow or unconfigured WhatsApp API
+  // never delays this — see utils/whatsapp.js.
+  notifyOrderInterest({ productTitle: item.title });
+
+  res.status(204).end();
+}
+
+module.exports = { listGallery, createGalleryItem, updateGalleryItem, deleteGalleryItem, recordOrderClick };

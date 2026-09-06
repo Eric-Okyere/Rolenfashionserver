@@ -73,13 +73,13 @@ async function run() {
   await connectDB();
 
   // Admin user
-  const adminEmail = (process.env.SEED_ADMIN_EMAIL || 'ababryan3@gmail.com').toLowerCase();
+  const adminEmail = (process.env.SEED_ADMIN_EMAIL || 'admin@rolenfashion.example').toLowerCase();
   const existingAdmin = await User.findOne({ email: adminEmail });
   if (!existingAdmin) {
     await User.create({
-      name: process.env.SEED_ADMIN_NAME || 'Rolen',
+      name: process.env.SEED_ADMIN_NAME || 'Rolen Admin',
       email: adminEmail,
-      password: process.env.SEED_ADMIN_PASSWORD || 'rolen123',
+      password: process.env.SEED_ADMIN_PASSWORD || 'ChangeMe123!',
       role: 'admin',
       isCEO: true,
     });

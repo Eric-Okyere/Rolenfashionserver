@@ -7,6 +7,9 @@ const { uploadGallery } = require('../middleware/upload');
 const router = express.Router();
 
 router.get('/', optionalAuth, ctrl.listGallery);
+// Public — no auth. Fired by a shopper's own browser the instant they tap
+// "Order via WhatsApp" (see GalleryItem.js / controller comment above).
+router.post('/:id/order-click', ctrl.recordOrderClick);
 router.post(
   '/',
   protect,
