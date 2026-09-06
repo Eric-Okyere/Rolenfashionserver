@@ -93,6 +93,16 @@ async function generateAdmissionLetter({ application, course, settings }) {
     }
   }
 
+  // Eric: "Only one number is showing on the admission letter. Show both
+  // numbers on it." — `settings.phone` (the plain call line) and
+  // `settings.whatsapp` (the separate WhatsApp-only line, see
+  // Settings.phone/Settings.whatsapp above) are genuinely different numbers,
+  // so both are printed here, alongside the email, same as the Contact page
+  // already shows both independently. Constrained to the space left of the
+  // applicant's photo box (which starts at x=469) so it can never run under
+  // it; wraps to a second line on its own if ever too long for one.
+  const contactParts = [settings.email, settings.phone, settings.whatsapp].filter(Boolean);
+
   doc
     .fontSize(18)
     .fillColor('#111827')
@@ -100,7 +110,7 @@ async function generateAdmissionLetter({ application, course, settings }) {
     .fontSize(9)
     .fillColor('#6b7280')
     .text(settings.address || '', 140, 72)
-    .text(`${settings.email || ''}  |  ${settings.phone || ''}`, 140, 86);
+    .text(contactParts.join('  |  '), 140, 86, { width: 320 });
 
   doc.moveTo(56, 120).lineTo(539, 120).strokeColor('#c9a227').lineWidth(2).stroke();
 
