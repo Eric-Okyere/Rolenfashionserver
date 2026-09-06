@@ -8,7 +8,8 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "seed": "node src/seed/seed.js",
-    "migrate:real-content": "node src/seed/apply-real-content.js"
+    "migrate:real-content": "node src/seed/apply-real-content.js",
+    "reset-admin": "node src/seed/reset-admin.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
