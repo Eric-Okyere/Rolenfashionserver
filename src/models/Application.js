@@ -38,6 +38,18 @@ const applicationSchema = new mongoose.Schema(
     reviewedAt: { type: Date },
     admissionLetterPath: { type: String }, // generated PDF path once admitted
     admissionLetterGeneratedAt: { type: Date },
+    // Eric: "Students must pay their fees through Momo on 0209317581", then
+    // asked for students to enter their phone number and have the money
+    // deducted directly — built via Paystack's Mobile Money checkout (see
+    // utils/paystack.js and paymentController.js), which is what actually
+    // debits their MoMo wallet; this project never touches a PIN/OTP itself.
+    // Tracks only the required deposit (Course.depositAmount) being paid
+    // online, not the full multi-installment balance — the balance is still
+    // handled the existing way (cash/MoMo transfer arranged with the school),
+    // matching the printed payment schedule on the admission letter.
+    feePaymentStatus: { type: String, enum: ['unpaid', 'paid'], default: 'unpaid' },
+    feeAmountPaid: { type: Number, default: 0 }, // GHS, running total of successful online payments
+    feePaymentReference: { type: String }, // most recent successful Paystack reference
   },
   { timestamps: true }
 );

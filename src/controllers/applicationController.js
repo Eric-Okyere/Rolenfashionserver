@@ -48,7 +48,10 @@ async function submitApplication(req, res) {
 async function trackApplication(req, res) {
   const { applicationNumber } = req.params;
   const { email } = req.query;
-  const application = await Application.findOne({ applicationNumber }).populate('course', 'title duration fee feeCurrency');
+  const application = await Application.findOne({ applicationNumber }).populate(
+    'course',
+    'title duration fee feeCurrency depositAmount'
+  );
 
   if (!application || (email && application.email.toLowerCase() !== String(email).toLowerCase())) {
     return res.status(404).json({ message: 'No application found with that number and email.' });
@@ -56,6 +59,7 @@ async function trackApplication(req, res) {
 
   res.json({
     application: {
+      _id: application._id,
       applicationNumber: application.applicationNumber,
       firstName: application.firstName,
       lastName: application.lastName,
@@ -64,6 +68,8 @@ async function trackApplication(req, res) {
       submittedAt: application.createdAt,
       reviewedAt: application.reviewedAt,
       canDownloadLetter: application.status === 'admitted' && !!application.admissionLetterPath,
+      feePaymentStatus: application.feePaymentStatus,
+      feeAmountPaid: application.feeAmountPaid,
     },
   });
 }

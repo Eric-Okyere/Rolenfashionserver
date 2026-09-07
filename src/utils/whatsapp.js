@@ -111,9 +111,24 @@ async function notifyOrderInterest({ productTitle }) {
   ]);
 }
 
+// Notifies that a Mobile Money payment actually went through — an admission
+// fee deposit or a shop order paid via Paystack (see paymentController.js).
+// Unlike notifyOrderInterest above (fired the instant a shopper taps a
+// button, before any money has moved), this only fires once Paystack has
+// confirmed the charge succeeded, so this message means the money has
+// genuinely landed, not just that someone started the checkout.
+async function notifyPaymentReceived({ label, amount, reference }) {
+  await sendWhatsAppTemplate([
+    'MoMo payment received',
+    `${label} — GHS ${Number(amount).toLocaleString()}`,
+    `Ref: ${reference}`,
+  ]);
+}
+
 module.exports = {
   notifyNewApplication,
   notifyNewMessage,
   notifyNewNewsletterSignup,
   notifyOrderInterest,
+  notifyPaymentReceived,
 };

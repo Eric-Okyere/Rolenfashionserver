@@ -22,6 +22,7 @@ const testimonialRoutes = require('./routes/testimonial.routes');
 const newsletterRoutes = require('./routes/newsletter.routes');
 const userRoutes = require('./routes/user.routes');
 const activityRoutes = require('./routes/activity.routes');
+const paymentRoutes = require('./routes/payment.routes');
 
 const app = express();
 
@@ -40,7 +41,13 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: '2mb' }));
+// The `verify` hook stashes the exact raw request bytes on req.rawBody
+// before any parsing/sanitizing happens — needed only by the Paystack
+// webhook (paymentController.js), which must hash the literal bytes Paystack
+// sent to check its signature; a re-serialized copy of req.body can hash
+// differently even for identical data. Harmless overhead on every other
+// request (nothing else reads req.rawBody).
+app.use(express.json({ limit: '2mb', verify: (req, res, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(cookieParser());
 app.use(mongoSanitize()); // strips $ and . operators from user input to prevent NoSQL injection
@@ -68,6 +75,7 @@ app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/activity', activityRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

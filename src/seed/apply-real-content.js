@@ -86,6 +86,11 @@ const realCourses = [
     fee: 7000,
     feeCurrency: 'GHS',
     isPublished: true,
+    // Matches the printed payment schedule's Beginner deposit (see
+    // Settings.paymentScheduleText) — the amount the "Pay Deposit via MoMo"
+    // button charges, not the full GHS 7,000 fee. Forced every run, same as
+    // every other field here.
+    depositAmount: 5000,
   },
   {
     title: 'Advanced Class',
@@ -101,6 +106,8 @@ const realCourses = [
     fee: 10000,
     feeCurrency: 'GHS',
     isPublished: true,
+    // Matches the printed payment schedule's Advanced Class deposit.
+    depositAmount: 7000,
   },
 ];
 
@@ -244,11 +251,16 @@ async function run() {
     // conversation, to add the Advanced Class's fee/payment-schedule
     // paragraph alongside the existing Beginners one, so this needs to
     // overwrite whatever's already live (which only ever had Beginners).
+    // The Momo line (added in a later round, forced for the same reason —
+    // Eric: "Students must pay their fees through Momo on 0209317581") is
+    // appended once at the end since it's the shared payment channel for
+    // both tracks, not a per-track amount.
     settings.paymentScheduleText =
       'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GHS 7,000.00).\n\n' +
       'Payment Schedule: GHS 5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.\n\n' +
       'For the Advanced Class, the duration is Three (3) months. The cost is Ten Thousand Ghana Cedis (GHS 10,000.00).\n\n' +
-      'Payment Schedule: GHS 7,000.00 payable before commencement of class.';
+      'Payment Schedule: GHS 7,000.00 payable before commencement of class.\n\n' +
+      'All fees are payable via Mobile Money (MoMo) to 0209317581.';
     // Class days/times per track and the academic terms, given directly by
     // Eric — only filled in if still empty.
     if (!settings.scheduleText) {
