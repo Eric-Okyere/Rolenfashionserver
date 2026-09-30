@@ -84,7 +84,7 @@ const realCourses = [
     intakePeriods: ['March – September', 'September – March'],
     order: 1,
     fee: 7000,
-    feeCurrency: 'GHS',
+    feeCurrency: 'GH¢',
     isPublished: true,
     // Matches the printed payment schedule's Beginner deposit (see
     // Settings.paymentScheduleText) — the amount the "Pay Deposit via MoMo"
@@ -104,7 +104,7 @@ const realCourses = [
     intakePeriods: ['March – September', 'September – March'],
     order: 2,
     fee: 10000,
-    feeCurrency: 'GHS',
+    feeCurrency: 'GH¢',
     isPublished: true,
     // Matches the printed payment schedule's Advanced Class deposit.
     depositAmount: 7000,
@@ -243,7 +243,7 @@ async function run() {
     // both tracks.
     if (!settings.tuitionText) {
       settings.tuitionText =
-        'Tuition for the Beginner class (6 months) is GHS 7,000. Tuition for the Advanced class (3 months) is GHS 10,000.';
+        'Tuition for the Beginner class (6 months) is GH¢ 7,000. Tuition for the Advanced class (3 months) is GH¢ 10,000.';
     }
     // Real "Fees and Payment Schedule" flyer content, given directly by Eric.
     // Forced (not fill-if-empty) this specific round, same one-time-exception
@@ -256,10 +256,10 @@ async function run() {
     // appended once at the end since it's the shared payment channel for
     // both tracks, not a per-track amount.
     settings.paymentScheduleText =
-      'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GHS 7,000.00).\n\n' +
-      'Payment Schedule: GHS 5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.\n\n' +
-      'For the Advanced Class, the duration is Three (3) months. The cost is Ten Thousand Ghana Cedis (GHS 10,000.00).\n\n' +
-      'Payment Schedule: GHS 7,000.00 payable before commencement of class.\n\n' +
+      'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GH¢7,000.00).\n\n' +
+      'Payment Schedule: GH¢5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.\n\n' +
+      'For the Advanced Class, the duration is Three (3) months. The cost is Ten Thousand Ghana Cedis (GH¢10,000.00).\n\n' +
+      'Payment Schedule: GH¢7,000.00 payable before commencement of class.\n\n' +
       'All fees are payable via Mobile Money (MoMo) to 0209317581.';
     // Class days/times per track and the academic terms, given directly by
     // Eric — only filled in if still empty.

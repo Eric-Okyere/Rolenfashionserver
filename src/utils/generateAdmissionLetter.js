@@ -192,7 +192,7 @@ async function generateAdmissionLetter({ application, course, settings }) {
   // instead of ever printing "GHS NaN".
   const tuitionLine =
     course.fee != null
-      ? `Tuition for the ${course.title}, ${course.duration}, is ${course.feeCurrency || 'GHS'} ${Number(course.fee).toLocaleString()}, payable in accordance with the fees and payment schedule ${hasPageTwo ? 'set out on page two of this letter' : 'communicated by the admissions office'}.`
+      ? `Tuition for the ${course.title}, ${course.duration}, is ${course.feeCurrency || 'GH¢'} ${Number(course.fee).toLocaleString()}, payable in accordance with the fees and payment schedule ${hasPageTwo ? 'set out on page two of this letter' : 'communicated by the admissions office'}.`
       : (settings.tuitionText || '').trim() || 'Please contact the admissions office for current tuition information.';
   doc.font('Helvetica').fontSize(11).text(tuitionLine, { align: 'justify' });
   doc.moveDown(0.5);

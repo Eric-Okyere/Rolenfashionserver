@@ -124,7 +124,7 @@ async function finalizePayment(reference, txData) {
       await application.save();
       await logActivity({
         type: 'payment.admission_fee_paid',
-        summary: `${application.firstName} ${application.lastName} paid the GHS ${payment.amount.toLocaleString()} deposit via MoMo (${payment.reference})`,
+        summary: `${application.firstName} ${application.lastName} paid the GH¢ ${payment.amount.toLocaleString()} deposit via MoMo (${payment.reference})`,
         meta: { applicationId: application._id, paymentId: payment._id },
       });
       notifyPaymentReceived({
@@ -137,7 +137,7 @@ async function finalizePayment(reference, txData) {
     const item = await Gallery.findById(payment.galleryItem);
     await logActivity({
       type: 'payment.shop_order_paid',
-      summary: `${payment.name || payment.email} paid GHS ${payment.amount.toLocaleString()} for ${item?.title || 'a product'} via MoMo (${payment.reference})`,
+      summary: `${payment.name || payment.email} paid GH¢ ${payment.amount.toLocaleString()} for ${item?.title || 'a product'} via MoMo (${payment.reference})`,
       meta: { galleryItemId: payment.galleryItem, paymentId: payment._id },
     });
     notifyPaymentReceived({

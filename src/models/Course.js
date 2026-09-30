@@ -15,7 +15,7 @@ const courseSchema = new mongoose.Schema(
     duration: { type: String, required: true }, // e.g. "6 months", "2 years"
     level: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced', 'All Levels'], default: 'All Levels' },
     fee: { type: Number }, // in GHS — optional; some programs don't publish a fee
-    feeCurrency: { type: String, default: 'GHS' },
+    feeCurrency: { type: String, default: 'GH¢' },
     // The amount charged by the "Pay Deposit via MoMo" button on the
     // admissions status page — Eric's printed payment schedule has students
     // pay a deposit up front and the balance later (see Settings.

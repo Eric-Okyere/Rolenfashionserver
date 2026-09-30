@@ -29,7 +29,17 @@ class CloudinaryStorage {
     const uploadStream = cloudinary.uploader.upload_stream(
       { folder: this.folder, resource_type: this.resourceTypeFor(file), public_id: publicId, overwrite: false },
       (err, result) => {
-        if (err) return cb(err);
+        if (err) {
+          // Cloudinary's own rejection (e.g. a photo over its plan's per-file
+          // size limit) is the real, useful message here — tag it 400 so
+          // errorHandler.js shows it to the admin verbatim instead of
+          // falling through to a generic "Something went wrong." (Eric:
+          // "let the form be able to take large pictures and video instead
+          // of reducing the quality" — this makes the actual ceiling (his
+          // Cloudinary plan's own limit, not this app) visible when hit.)
+          err.statusCode = 400;
+          return cb(err);
+        }
         // `path` mirrors what diskStorage sets it to, so downstream code can
         // treat both engines the same way (see fileUrl() below).
         cb(null, { path: result.secure_url, filename: result.public_id, size: result.bytes });
@@ -137,7 +147,17 @@ function fileFilterByField(allowedExtsByField) {
   };
 }
 
-const maxBytes = (parseInt(process.env.MAX_UPLOAD_MB, 10) || 50) * 1024 * 1024;
+// Eric: "let the form be able to take large pictures and video instead of
+// reducing the quality" — nothing in this app ever compressed or resized an
+// upload (Cloudinary stores exactly what's sent unless a transformation is
+// requested, and none is), so the only real ceiling was ever this number.
+// 100MB matches Cloudinary's own free-plan video limit exactly, so a video
+// never gets turned away by *this* app before it would've been accepted by
+// Cloudinary anyway. Photos are comfortably covered too — even a high-res
+// phone photo rarely exceeds 10-15MB. Override with MAX_UPLOAD_MB in .env
+// if Eric's Cloudinary plan changes (see the size-limit note on
+// uploadCourseImage below for the free plan's actual per-photo ceiling).
+const maxBytes = (parseInt(process.env.MAX_UPLOAD_MB, 10) || 100) * 1024 * 1024;
 
 const uploadImage = multer({
   storage: makeStorage('signatures'),
@@ -167,7 +187,12 @@ const uploadCarousel = multer({
 
 const uploadCourseImage = multer({
   storage: makeStorage('courses'),
-  limits: { fileSize: 8 * 1024 * 1024 },
+  // 10MB is Cloudinary's own free-plan per-image ceiling (verified against
+  // Cloudinary's current pricing page) — raising this app's own limit any
+  // higher wouldn't help, since Cloudinary would reject the file first.
+  // Upgrading to Cloudinary's Plus plan raises that to 20MB (Advanced: 40MB)
+  // if a course cover photo ever genuinely needs to be larger.
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: fileFilter(ALLOWED_IMAGE),
 });
 

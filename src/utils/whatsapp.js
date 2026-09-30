@@ -120,7 +120,7 @@ async function notifyOrderInterest({ productTitle }) {
 async function notifyPaymentReceived({ label, amount, reference }) {
   await sendWhatsAppTemplate([
     'MoMo payment received',
-    `${label} — GHS ${Number(amount).toLocaleString()}`,
+    `${label} — GH¢ ${Number(amount).toLocaleString()}`,
     `Ref: ${reference}`,
   ]);
 }
