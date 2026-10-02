@@ -35,9 +35,27 @@ app.use(
     crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow images/videos to be embedded by the Next.js frontend
   })
 );
+// CLIENT_URL may be a single origin or a comma-separated list — lets a
+// custom domain (apex + www) and the original Netlify URL all keep working
+// at once during a domain switch, instead of CORS breaking the moment one
+// is added without the other being removed. Eric: "let's connect this
+// application to this domain name" (rolengh.com) — without this, logging
+// in from the new domain would hit the exact CORS block documented in the
+// original Netlify<->Render deployment round, since CLIENT_URL was a single
+// fixed string.
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin(origin, callback) {
+      // No Origin header at all (server-to-server calls, curl, the
+      // Paystack webhook) — allow; there's no browser same-origin policy
+      // to enforce here and callers like that can't send cookies anyway.
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error(`Not allowed by CORS: ${origin}`));
+    },
     credentials: true,
   })
 );
