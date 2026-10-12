@@ -44,10 +44,62 @@ async function createGalleryItem(req, res) {
   res.status(201).json({ item });
 }
 
-// PUT /api/gallery/:id (admin)
+// PUT /api/gallery/:id (admin) — partial update to any of title/
+// description/category/price/isFeatured/isPublished, and (new) optionally
+// replacing the photos and/or video in the same request, multipart, same
+// field names as POST (`images`, `video`). Eric: "Let a product be edited
+// in the gallery and shop page" — the route already accepted field
+// changes (used by the Publish/Unpublish toggle), this adds the actual
+// edit form plus photo/video replacement.
 async function updateGalleryItem(req, res) {
-  const item = await Gallery.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+  const item = await Gallery.findById(req.params.id);
   if (!item) return res.status(404).json({ message: 'Item not found.' });
+
+  // Whitelisted, explicitly-typed fields only — req.body may come from
+  // either a JSON request (the Publish/Unpublish toggle, correctly typed
+  // already) or multipart form fields (the edit form, everything a string),
+  // so booleans/empty-price are normalized the same way createGalleryItem
+  // already does.
+  for (const key of ['title', 'description', 'category']) {
+    if (req.body[key] !== undefined) item[key] = req.body[key];
+  }
+  if (req.body.price !== undefined) {
+    item.price = req.body.price === '' ? undefined : req.body.price;
+  }
+  for (const key of ['isFeatured', 'isPublished']) {
+    if (req.body[key] !== undefined) item[key] = req.body[key] === true || req.body[key] === 'true';
+  }
+
+  const newImageFiles = req.files?.images || [];
+  const newVideoFile = req.files?.video?.[0];
+  if (newImageFiles.length > 5) {
+    return res.status(400).json({ message: 'A product can have at most 5 photos.' });
+  }
+  const oldImageUrls = item.imageUrls || [];
+  const oldVideoUrl = item.videoUrl;
+  if (newImageFiles.length) {
+    const imageUrls = newImageFiles.map((f) => fileUrl(f, 'gallery'));
+    item.imageUrl = imageUrls[0];
+    item.imageUrls = imageUrls;
+  }
+  if (newVideoFile) {
+    item.videoUrl = fileUrl(newVideoFile, 'gallery');
+  }
+
+  // .save() already runs schema validators by default — no runValidators option needed here (that's a findByIdAndUpdate-style option, not a .save() one).
+  await item.save();
+
+  // Old media is replaced wholesale (not merged), matching how the Post
+  // form itself works (choose 1-5 photos as one set) — cleaned up from
+  // Cloudinary after the DB write succeeds, same best-effort, never-blocks
+  // pattern as deleteGalleryItem.
+  if (newImageFiles.length) {
+    Promise.all(oldImageUrls.filter(Boolean).map(deleteUploadedFile)).catch(() => {});
+  }
+  if (newVideoFile && oldVideoUrl) {
+    deleteUploadedFile(oldVideoUrl).catch(() => {});
+  }
+
   await logActivity({
     type: 'gallery.updated',
     summary: `${req.user.name} updated product: ${item.title}`,

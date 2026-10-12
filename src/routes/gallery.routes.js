@@ -20,7 +20,19 @@ router.post(
   ]),
   ctrl.createGalleryItem
 );
-router.put('/:id', protect, authorize('admin', 'staff'), ctrl.updateGalleryItem);
+router.put(
+  '/:id',
+  protect,
+  authorize('admin', 'staff'),
+  // Optional — present only when the edit form is replacing photos/video;
+  // multer passes plain JSON/urlencoded requests (e.g. the Publish toggle)
+  // straight through untouched.
+  uploadGallery.fields([
+    { name: 'images', maxCount: 5 },
+    { name: 'video', maxCount: 1 },
+  ]),
+  ctrl.updateGalleryItem
+);
 router.delete('/:id', protect, authorize('admin'), ctrl.deleteGalleryItem);
 
 module.exports = router;
