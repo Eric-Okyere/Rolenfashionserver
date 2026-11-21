@@ -25,10 +25,12 @@ async function createGalleryItem(req, res) {
   const imageUrls = imageFiles.map((f) => fileUrl(f, 'gallery'));
 
   const item = await Gallery.create({
+    name: req.body.name || undefined,
     title: req.body.title || imageFiles[0].originalname,
     description: req.body.description,
     category: req.body.category,
     price: req.body.price || undefined,
+    depositAmount: req.body.depositAmount || undefined,
     isFeatured: req.body.isFeatured === 'true',
     imageUrl: imageUrls[0],
     imageUrls,
@@ -60,11 +62,14 @@ async function updateGalleryItem(req, res) {
   // already) or multipart form fields (the edit form, everything a string),
   // so booleans/empty-price are normalized the same way createGalleryItem
   // already does.
-  for (const key of ['title', 'description', 'category']) {
+  for (const key of ['name', 'title', 'description', 'category']) {
     if (req.body[key] !== undefined) item[key] = req.body[key];
   }
   if (req.body.price !== undefined) {
     item.price = req.body.price === '' ? undefined : req.body.price;
+  }
+  if (req.body.depositAmount !== undefined) {
+    item.depositAmount = req.body.depositAmount === '' ? undefined : req.body.depositAmount;
   }
   for (const key of ['isFeatured', 'isPublished']) {
     if (req.body[key] !== undefined) item[key] = req.body[key] === true || req.body[key] === 'true';

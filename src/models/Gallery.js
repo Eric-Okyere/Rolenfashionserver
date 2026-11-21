@@ -2,6 +2,12 @@ const mongoose = require('mongoose');
 
 const gallerySchema = new mongoose.Schema(
   {
+    // Eric: "Add a name field … separate the product name from the product
+    // description." The piece's own name (e.g. "Aba Dress"), shown as the
+    // headline; `title` stays the descriptive style line beneath it (e.g.
+    // "Navy Corset Maxi Dress with African Print Bishop Sleeves"). Optional
+    // so every existing product still validates.
+    name: { type: String, trim: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
     // Every product needs a photo; the video is an optional companion clip
@@ -62,6 +68,10 @@ const gallerySchema = new mongoose.Schema(
       default: 'Other',
     },
     price: { type: Number }, // optional, if the item is for sale
+    // Pre-order products only (any category other than Ready-to-Wear): the
+    // deposit a shopper pays online via MoMo to place the order. Varies per
+    // product; when blank, 70% of `price` is charged — see utils/preorder.js.
+    depositAmount: { type: Number, min: 0 },
     isFeatured: { type: Boolean, default: false },
     isPublished: { type: Boolean, default: true },
     uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

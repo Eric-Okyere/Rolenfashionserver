@@ -5,6 +5,7 @@ const Gallery = require('../models/Gallery');
 const logActivity = require('../utils/activityLog');
 const { notifyPaymentReceived } = require('../utils/whatsapp');
 const { initializeTransaction, verifyTransaction, verifyWebhookSignature } = require('../utils/paystack');
+const { isPreOrderCategory, payableAmount } = require('../utils/preorder');
 
 function makeReference(type) {
   // Not a Paystack requirement to be unguessable, just unique — prefixed so
@@ -53,9 +54,11 @@ async function initializePayment(req, res, next) {
     } else {
       galleryItem = await Gallery.findById(galleryItemId);
       if (!galleryItem) return res.status(404).json({ message: 'Product not found.' });
-      amount = galleryItem.price;
+      // Ready-to-Wear: the full fixed price. Pre-order lines: the deposit
+      // (per-product, or 70% of the price by default) — see utils/preorder.js.
+      amount = payableAmount(galleryItem);
       if (!amount) {
-        return res.status(400).json({ message: 'This product does not have a price set yet. Please order via WhatsApp instead.' });
+        return res.status(400).json({ message: 'This product does not have a price or deposit set yet. Please order via WhatsApp instead.' });
       }
     }
 
@@ -135,13 +138,16 @@ async function finalizePayment(reference, txData) {
     }
   } else if (payment.type === 'shop_order' && payment.galleryItem) {
     const item = await Gallery.findById(payment.galleryItem);
+    // Pre-order payments are deposits, not the full price — say so in the
+    // activity log and the WhatsApp alert so Eric knows a balance remains.
+    const isDeposit = item ? isPreOrderCategory(item.category) : false;
     await logActivity({
       type: 'payment.shop_order_paid',
-      summary: `${payment.name || payment.email} paid GH¢ ${payment.amount.toLocaleString()} for ${item?.title || 'a product'} via MoMo (${payment.reference})`,
+      summary: `${payment.name || payment.email} paid GH¢ ${payment.amount.toLocaleString()}${isDeposit ? ' pre-order deposit' : ''} for ${item?.title || 'a product'} via MoMo (${payment.reference})`,
       meta: { galleryItemId: payment.galleryItem, paymentId: payment._id },
     });
     notifyPaymentReceived({
-      label: `Order paid: ${item?.title || 'a product'}`,
+      label: `${isDeposit ? 'Pre-order deposit paid' : 'Order paid'}: ${item?.title || 'a product'}`,
       amount: payment.amount,
       reference: payment.reference,
     });
@@ -205,7 +211,7 @@ async function listPayments(req, res, next) {
     if (req.query.status) filter.status = req.query.status;
     const payments = await Payment.find(filter)
       .populate('application', 'applicationNumber firstName lastName')
-      .populate('galleryItem', 'title')
+      .populate('galleryItem', 'name title')
       .sort({ createdAt: -1 })
       .limit(300);
     res.json({ payments });
