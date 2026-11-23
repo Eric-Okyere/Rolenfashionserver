@@ -24,6 +24,7 @@ const userRoutes = require('./routes/user.routes');
 const activityRoutes = require('./routes/activity.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const visitRoutes = require('./routes/visit.routes');
+const bespokeRoutes = require('./routes/bespoke.routes');
 
 const app = express();
 
@@ -96,6 +97,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/activity', activityRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/visits', visitRoutes);
+app.use('/api/bespoke', bespokeRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

@@ -205,8 +205,17 @@ const uploadApplicationPhoto = multer({
   fileFilter: fileFilter(ALLOWED_IMAGE),
 });
 
+// Inspiration photos a customer attaches to a bespoke outfit request (up to
+// 4) — see bespoke.routes.js.
+const uploadBespokePhotos = multer({
+  storage: makeStorage('bespoke'),
+  limits: { fileSize: 10 * 1024 * 1024, files: 4 },
+  fileFilter: fileFilter(ALLOWED_IMAGE),
+});
+
 module.exports = {
   uploadImage,
+  uploadBespokePhotos,
   uploadGallery,
   uploadCarousel,
   uploadCourseImage,

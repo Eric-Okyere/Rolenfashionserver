@@ -125,7 +125,17 @@ async function notifyPaymentReceived({ label, amount, reference }) {
   ]);
 }
 
+// Notifies about a new bespoke outfit request (see bespokeController.js).
+async function notifyBespokeRequest({ name, outfitType, phone }) {
+  await sendWhatsAppTemplate([
+    'New bespoke outfit request',
+    `${name} wants: ${outfitType}`,
+    `Phone: ${phone} · Check Admin → Bespoke Requests`,
+  ]);
+}
+
 module.exports = {
+  notifyBespokeRequest,
   notifyNewApplication,
   notifyNewMessage,
   notifyNewNewsletterSignup,
