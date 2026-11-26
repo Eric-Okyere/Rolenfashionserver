@@ -2,6 +2,7 @@ const Gallery = require('../models/Gallery');
 const logActivity = require('../utils/activityLog');
 const { notifyOrderInterest } = require('../utils/whatsapp');
 const { fileUrl, deleteUploadedFile } = require('../middleware/upload');
+const { isPreOrderCategory } = require('../utils/preorder');
 
 // GET /api/gallery (public — published only unless admin ?all=1)
 async function listGallery(req, res) {
@@ -29,7 +30,8 @@ async function createGalleryItem(req, res) {
     title: req.body.title || imageFiles[0].originalname,
     description: req.body.description,
     category: req.body.category,
-    price: req.body.price || undefined,
+    // Pre-order products carry no price — only Ready-to-Wear does.
+    price: isPreOrderCategory(req.body.category) ? undefined : req.body.price || undefined,
     depositAmount: req.body.depositAmount || undefined,
     isFeatured: req.body.isFeatured === 'true',
     imageUrl: imageUrls[0],
@@ -74,6 +76,7 @@ async function updateGalleryItem(req, res) {
   for (const key of ['isFeatured', 'isPublished']) {
     if (req.body[key] !== undefined) item[key] = req.body[key] === true || req.body[key] === 'true';
   }
+  if (isPreOrderCategory(item.category)) item.price = undefined;
 
   const newImageFiles = req.files?.images || [];
   const newVideoFile = req.files?.video?.[0];

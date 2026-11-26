@@ -1,10 +1,12 @@
 require('dotenv').config();
 const app = require('./app');
 const connectDB = require('./config/db');
+const { runMigrations } = require('./utils/migrations');
 
 const PORT = process.env.PORT || 5001;
 
-connectDB().then(() => {
+connectDB().then(async () => {
+  await runMigrations();
   app.listen(PORT, () => {
     const line = '─'.repeat(46);
     console.log(line);

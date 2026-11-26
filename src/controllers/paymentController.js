@@ -55,7 +55,7 @@ async function initializePayment(req, res, next) {
       galleryItem = await Gallery.findById(galleryItemId);
       if (!galleryItem) return res.status(404).json({ message: 'Product not found.' });
       // Ready-to-Wear: the full fixed price. Pre-order lines: the deposit
-      // (per-product, or 70% of the price by default) — see utils/preorder.js.
+      // set per product by an admin — see utils/preorder.js.
       amount = payableAmount(galleryItem);
       if (!amount) {
         return res.status(400).json({ message: 'This product does not have a price or deposit set yet. Please order via WhatsApp instead.' });

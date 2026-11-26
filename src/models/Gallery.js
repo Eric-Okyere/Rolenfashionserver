@@ -47,6 +47,7 @@ const gallerySchema = new mongoose.Schema(
       type: String,
       enum: [
         'Rolen Kente',
+        'Ewuraba by Rolen(RTW)',
         'Rolen Bridals',
         'Rolen Custom',
         'Rolen Ready-to-Wear',
@@ -70,7 +71,7 @@ const gallerySchema = new mongoose.Schema(
     price: { type: Number }, // optional, if the item is for sale
     // Pre-order products only (any category other than Ready-to-Wear): the
     // deposit a shopper pays online via MoMo to place the order. Varies per
-    // product; when blank, 70% of `price` is charged — see utils/preorder.js.
+    // product; when blank, no MoMo payment is offered — see utils/preorder.js.
     depositAmount: { type: Number, min: 0 },
     isFeatured: { type: Boolean, default: false },
     isPublished: { type: Boolean, default: true },
